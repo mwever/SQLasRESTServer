@@ -1,7 +1,17 @@
-plugins {
-	id 'java'
-	id 'eclipse-wtp'
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:2.2.1.RELEASE")
+    }
 }
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
 
 sourceSets {
     main {
@@ -10,6 +20,7 @@ sourceSets {
         }
         resources {
         	srcDir 'conf'
+        	srcDir 'resources'
     	}
     }
 	test {
@@ -23,35 +34,36 @@ sourceSets {
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
 
 dependencies {
 	// dependencies for development time
- 	implementation ('ai.libs:jaicore-basic:0.1.6') {
- 		exclude group: 'org.nd4j'
- 		exclude group: 'org.bytedeco.javacpp-presets'
- 		exclude group: 'org.deeplearning4j'
- 		exclude group: 'org.openjfx'
- 		exclude group: 'com.sun.jersey'
- 		exclude group: 'org.glassfish.jersey.core'
- 		exclude group: 'org.glassfish.jersey.inject'
- 		exclude group: 'org.apache.hadoop'
- 		exclude group: 'org.apache.maven'
- 		exclude group: 'org.apache.zookeeper'
- 		exclude group: 'org.glassfish.jersey.ext'
- 		exclude group: 'org.eclipse.rdf4j'
- 		exclude group: 'net.sourceforge.owlapi'
- 		exclude group: 'org.graphstream'
- 		exclude group: 'com.github.graphstream'
- 		exclude group: 'com.github.mwever'
- 		exclude module: 'weka'
- 	}
+ 	compile ('ai.libs:jaicore-basic:0.1.6')
  	
+ 	compile("mysql:mysql-connector-java:5.1.48")
+ 	
+ 	compile("commons-codec:commons-codec:1.11")
+	compile("org.springframework.boot:spring-boot-starter-data-jpa")
+    compile("org.springframework.boot:spring-boot-starter-web")
+	compileOnly("org.projectlombok:lombok")
+	annotationProcessor("org.projectlombok:lombok")
+	
+	compile("org.apache.httpcomponents:httpclient:4.5.10")
+    
+    runtime("org.springframework.boot:spring-boot-devtools")
+    
+    testCompile("junit:junit")
+}
+
+
+eclipse {
+	project.natures "org.eclipse.buildship.core.gradleprojectnature"
 }
 
 repositories {
-	//mavenLocal()
-    mavenCentral()
-	maven { url "https://jitpack.io" }
-	maven { url "http://clojars.org/repo/" }
-	maven { url "https://plugins.gradle.org/m2/" }
+	mavenCentral()
 }

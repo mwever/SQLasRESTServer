@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en" ng-app="srsApp">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    
+    <script src="node_modules/angular/angular.min.js"></script>
+    <script src="node_modules/angular-route/angular-route.min.js"></script>
+	<script src="node_modules/jquery/jquery.min.js"></script>
+	<script src="node_modules/toastr/toastr.js"></script>
+    
+    <script src="app/sqlRestServer.js"></script>
+    
+	<link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
+	<link rel="stylesheet" href="css/toastr.css">
+	
+	<title>SQL REST Server</title>
+</head>
+
+<body ng-controller="SQLRestServerController as srsc">
+
+
+<div class="container" style="padding: 10px;">
+	<h1>Experimenter SQL Server Administration</h1>
+	
+	<div>
+		<h2>Create new Experiment Token</h2>
+			
+		<div class="form-group">
+			<div class="input-group">
+				<div class="input-group-prepend">
+					<span class="input-group-text" id="experiment-addon1">Experiment Name</span>
+				</div>
+				<input type="text" ng-model="srsc.experimentName" class="form-control" placeholder="MyExperimentName" aria-describedby="experiment-addon1">
+				<div class="input-group-append">
+					<button class="btn  btn-primary" type="button" ng-click="srsc.createExperimentToken()">Create Experiment</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<h2>Experiment List</h2>
+	
+	<table class="table">
+		<tr>
+			<th>#ID</th>
+			<th>Name</th>
+			<th>Token</th>
+		</tr>
+		<tr ng-repeat="exp in srsc.getExperimentList()">
+			<td>{{exp.id}}</td>
+			<td>{{exp.experiment_name}}</td>
+			<td>{{exp.experiment_token}}</td>
+		</tr>
+	</table>
+</div>
+
+	
+	<script src="node_modules/popper.js/dist/popper.min.js"></script>
+	<script src="node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+</body>
+
+</html>

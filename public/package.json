@@ -1,0 +1,20 @@
+{
+  "name": "SqlRestApiServer",
+  "version": "1.0.0",
+  "description": "A REST API for a MySQL Server.",
+  "main": "index.js",
+  "dependencies": {
+    "angular": "^1.7.9",
+    "angular-route": "^1.7.9",
+    "bootstrap": "^4.4.1",
+    "jquery": "^1.9.1",
+    "popper.js": "^1.16.0",
+    "toastr": "^2.1.4"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
