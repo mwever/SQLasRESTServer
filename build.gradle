@@ -42,7 +42,7 @@ configurations {
 
 dependencies {
 	// dependencies for development time
- 	compile ('ai.libs:jaicore-basic:0.1.6')
+ 	compile ('ai.libs:jaicore-basic') 
  	
  	compile("mysql:mysql-connector-java:5.1.48")
  	
@@ -59,6 +59,14 @@ dependencies {
     testCompile("junit:junit")
 }
 
+configurations {
+ 		all*.exclude module: 'log4j-to-slf4j'
+ 		all*.exclude module: 'log4j-api'
+ 		all*.exclude module: 'slf4j-log4j12'
+ 		all*.exclude module: 'log4j'
+ 		all*.exclude module: 'slf4j-log4j12'
+ 		all*.exclude group: 'ch.qos.logback'
+}
 
 eclipse {
 	project.natures "org.eclipse.buildship.core.gradleprojectnature"

@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ai.libs.jaicore.basic.SQLAdapter;
 import ai.libs.jaicore.basic.kvstore.IKVStore;
+import ai.libs.sqlrest.model.Experiment;
 
 @RestController
 public class AdministrationController {
@@ -38,7 +39,7 @@ public class AdministrationController {
 		data.put("db_user", dbNameAndUser);
 		data.put("db_passwd", password);
 
-		String createUserQuery = "CREATE USER '" + dbNameAndUser + "'@'%' IDENTIFIED WITH mysql_native_password AS '" + password + "'";
+		String createUserQuery = "CREATE USER '" + dbNameAndUser + "'@'%' IDENTIFIED BY '" + password + "'";
 		String grantUsage = "GRANT USAGE ON *.* TO '" + dbNameAndUser + "'@'%' REQUIRE NONE WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0 MAX_USER_CONNECTIONS 0";
 		String createDB = "CREATE DATABASE IF NOT EXISTS `" + dbNameAndUser + "`";
 		String grantPrivileges = "GRANT ALL PRIVILEGES ON `" + dbNameAndUser + "`.* TO '" + dbNameAndUser + "'@'%'";

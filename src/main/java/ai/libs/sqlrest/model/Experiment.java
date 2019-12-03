@@ -1,4 +1,4 @@
-package ai.libs.sqlrest;
+package ai.libs.sqlrest.model;
 
 import javax.persistence.Entity;
 

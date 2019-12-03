@@ -1,5 +1,6 @@
 package ai.libs.sqlrest;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ai.libs.jaicore.basic.SQLAdapter;
 import ai.libs.jaicore.basic.kvstore.IKVStore;
+import ai.libs.sqlrest.model.SQLQuery;
 
 @RestController
 public class QueryController {
@@ -80,13 +82,13 @@ public class QueryController {
 	}
 
 	@PostMapping("/query")
-	public List<IKVStore> query(@RequestBody final SQLQuery query) throws SQLException {
+	public List<IKVStore> query(@RequestBody final SQLQuery query) throws SQLException, IOException {
 		try {
 			this.isAllowedQuery(query.getQuery());
 		} catch (Exception e) {
 			throw new IllegalArgumentException("Query is not allowed", e);
 		}
-		return this.getConnector(query.getToken()).getResultsOfQuery(query.getQuery());
+		return this.getConnector(query.getToken()).query(query.getQuery());
 	}
 
 	@PostMapping("/update")
@@ -96,7 +98,9 @@ public class QueryController {
 		} catch (Exception e) {
 			throw new IllegalArgumentException("Query is not allowed", e);
 		}
-		return this.getConnector(query.getToken()).update(query.getQuery());
+		int returnValue = this.getConnector(query.getToken()).update(query.getQuery());
+		System.out.println(returnValue);
+		return returnValue;
 	}
 
 	@PostMapping("/insert")
