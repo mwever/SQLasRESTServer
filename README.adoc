@@ -1,0 +1,28 @@
+= SQL as REST-Server
+:app_name: SQLasRestServer
+
+{app_name} is a lightweight data access layer to SQL databases for HTTP clients.
+
+== Setup
+
+To start a {app_name} application follow these steps:
+
+. Clone this repository and AILibs.
++
+----
+>> git clone https://github.com/fmohr/AILibs.git
+>> git clone https://github.com/mwever/SQLasRESTServer.git
+>> cd SQLasRESTServer
+----
+
+
+. Build the docker image. 
+This assumes that the docker deamon is running and accessible  from the commandline.
++
+----
+>> bash build.sh
+----
++ 
+The resulting docker image is tagged `ai-libs/sql-rest-server`.
+
+.
