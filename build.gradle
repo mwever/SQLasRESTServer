@@ -122,3 +122,7 @@ eclipse {
 repositories {
 	mavenCentral()
 }
+
+bootRun {
+    workingDir = rootDir.getAbsolutePath()
+}
