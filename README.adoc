@@ -1,0 +1,67 @@
+= SQL as REST-Server
+:app_name: SQLasRestServer
+
+{app_name} is a lightweight data access layer to SQL databases for HTTP clients.
+
+== Setup
+
+Start a {app_name} application by following these steps:
+
+=== Getting the sources
+
+Clone this repository in addition to https://github.com/fmohr/AILibs[AILibs].
+[source, bash]
+----
+>> git clone https://github.com/fmohr/AILibs.git
+>> git clone https://github.com/mwever/SQLasRESTServer.git
+>> cd SQLasRESTServer
+----
+
+=== Configuration
+
+Supplement a configuration to the application by creating `conf/server.properties` :
+
+[source, properties]
+----
+# conf/server.properties
+db.host = example.com # <1>
+db.backend.name = database_name # <2>
+db.backend.user = user_name # <3>
+db.backend.passwd = password_123 # <4>
+server.adapter.instances = 1 # <5>
+----
+<1> The host of the (remote) database server.
+<2> The name of the database to connect to.
+<3> The username used for authentication.
+<4> The password used for authentication.
+<5> Number of connections to the database. A higher amount causes more overhead contention but allows for parallel access.
+
+
+=== Startup
+
+Either start a local server using `.gradlew bootRun`.
+
+Or deploy using docker:
+
+. Build the application. 
+This assumes that the docker deamon is running and accessible  from the commandline.
++
+----
+>> bash build.sh
+----
++ 
+The resulting docker image is tagged `ai-libs/sql-rest-server`.
+
+. Start the application.
++
+----
+>> bash run.sh
+----
++ 
+This starts a container with named `sqlrest`.
+
+. Stop the application.
++
+----
+>> bash stop.sh
+----
