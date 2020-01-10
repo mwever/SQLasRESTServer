@@ -14,12 +14,12 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.aeonbits.owner.ConfigCache;
+import org.api4.java.datastructure.kvstore.IKVStore;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import ai.libs.jaicore.basic.SQLAdapter;
-import ai.libs.jaicore.basic.kvstore.IKVStore;
+import ai.libs.jaicore.db.sql.SQLAdapter;
 import ai.libs.sqlrest.model.SQLQuery;
 
 @RestController
@@ -99,7 +99,6 @@ public class QueryController {
 			throw new IllegalArgumentException("Query is not allowed", e);
 		}
 		int returnValue = this.getConnector(query.getToken()).update(query.getQuery());
-		System.out.println(returnValue);
 		return returnValue;
 	}
 

@@ -9,12 +9,12 @@ import java.util.Random;
 
 import org.aeonbits.owner.ConfigCache;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.api4.java.datastructure.kvstore.IKVStore;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import ai.libs.jaicore.basic.SQLAdapter;
-import ai.libs.jaicore.basic.kvstore.IKVStore;
+import ai.libs.jaicore.db.sql.SQLAdapter;
 import ai.libs.sqlrest.model.Experiment;
 
 @RestController
