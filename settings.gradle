@@ -1,3 +1,2 @@
-includeBuild "../AILibs"
 
 rootProject.name = 'SQLREST'

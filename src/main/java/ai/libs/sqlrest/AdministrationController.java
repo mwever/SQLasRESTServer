@@ -39,11 +39,16 @@ public class AdministrationController {
 		data.put("db_user", dbNameAndUser);
 		data.put("db_passwd", password);
 
-		String createUserQuery = "CREATE USER '" + dbNameAndUser + "'@'%' IDENTIFIED BY '" + password + "'";
-		String grantUsage = "GRANT USAGE ON *.* TO '" + dbNameAndUser + "'@'%' REQUIRE NONE WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0 MAX_USER_CONNECTIONS 0";
+		// CREATE USER 'wever'@'%' IDENTIFIED WITH caching_sha2_password BY '***';
+		// GRANT USAGE ON *.* TO 'wever'@'%';ALTER USER 'wever'@'%' REQUIRE NONE WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0 MAX_USER_CONNECTIONS 0;
+		// CREATE DATABASE IF NOT EXISTS `wever`;GRANT ALL PRIVILEGES ON `wever`.* TO 'wever'@'%';
+
+		String createUserQuery = "CREATE USER '" + dbNameAndUser + "'@'%' IDENTIFIED WITH caching_sha2_password BY '" + password + "'";
+		String grantUsage = "GRANT USAGE ON *.* TO '" + dbNameAndUser + "'@'%'";
+		String alterUserForAccess = "ALTER USER '" + dbNameAndUser + "'@'%' REQUIRE NONE WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0 MAX_USER_CONNECTIONS 0";
 		String createDB = "CREATE DATABASE IF NOT EXISTS `" + dbNameAndUser + "`";
 		String grantPrivileges = "GRANT ALL PRIVILEGES ON `" + dbNameAndUser + "`.* TO '" + dbNameAndUser + "'@'%'";
-		List<String> queries = Arrays.asList(createUserQuery, grantUsage, createDB, grantPrivileges);
+		List<String> queries = Arrays.asList(createUserQuery, grantUsage, alterUserForAccess, createDB, grantPrivileges);
 
 		for (String query : queries) {
 			System.out.println("Execute query " + query);

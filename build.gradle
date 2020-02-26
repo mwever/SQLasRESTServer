@@ -42,7 +42,7 @@ configurations {
 
 dependencies {
 	// dependencies for development time
- 	compile ('ai.libs:jaicore-basic') {
+ 	compile ('ai.libs:jaicore-basic:0.2.1') {
  		exclude module: 'log4j-to-slf4j'
  		exclude module: 'log4j-api'
  		exclude module: 'slf4j-log4j12'
@@ -50,7 +50,7 @@ dependencies {
  		exclude module: 'slf4j-log4j12'
  	}
  	
- 	compile("mysql:mysql-connector-java:5.1.48") {
+ 	compile("mysql:mysql-connector-java:8.0.19") {
  		exclude module: 'log4j-to-slf4j'
  		exclude module: 'log4j-api'
  		exclude module: 'slf4j-log4j12'
