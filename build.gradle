@@ -41,75 +41,41 @@ configurations {
 }
 
 dependencies {
-	// dependencies for development time
- 	compile ('ai.libs:jaicore-basic:0.2.1') {
- 		exclude module: 'log4j-to-slf4j'
- 		exclude module: 'log4j-api'
- 		exclude module: 'slf4j-log4j12'
- 		exclude module: 'log4j'
- 		exclude module: 'slf4j-log4j12'
- 	}
- 	
- 	compile("mysql:mysql-connector-java:8.0.19") {
- 		exclude module: 'log4j-to-slf4j'
- 		exclude module: 'log4j-api'
- 		exclude module: 'slf4j-log4j12'
- 		exclude module: 'log4j'
- 		exclude module: 'slf4j-log4j12'
- 	}
- 	
- 	compile("commons-codec:commons-codec:1.11") {
- 		exclude module: 'log4j-to-slf4j'
- 		exclude module: 'log4j-api'
- 		exclude module: 'slf4j-log4j12'
- 		exclude module: 'log4j'
- 		exclude module: 'slf4j-log4j12'
- 	}
-	compile("org.springframework.boot:spring-boot-starter-data-jpa") {
- 		exclude module: 'log4j-to-slf4j'
- 		exclude module: 'log4j-api'
- 		exclude module: 'slf4j-log4j12'
- 		exclude module: 'log4j'
- 		exclude module: 'slf4j-log4j12'
- 	}
-    compile("org.springframework.boot:spring-boot-starter-web") {
- 		exclude module: 'log4j-to-slf4j'
- 		exclude module: 'log4j-api'
- 		exclude module: 'slf4j-log4j12'
- 		exclude module: 'log4j'
- 		exclude module: 'slf4j-log4j12'
- 	}
-	compileOnly("org.projectlombok:lombok") {
- 		exclude module: 'log4j-to-slf4j'
- 		exclude module: 'log4j-api'
- 		exclude module: 'slf4j-log4j12'
- 		exclude module: 'log4j'
- 		exclude module: 'slf4j-log4j12'
- 	}
-	annotationProcessor("org.projectlombok:lombok") {
- 		exclude module: 'log4j-to-slf4j'
- 		exclude module: 'log4j-api'
- 		exclude module: 'slf4j-log4j12'
- 		exclude module: 'log4j'
- 		exclude module: 'slf4j-log4j12'
- 	}
-	
-	compile("org.apache.httpcomponents:httpclient:4.5.10") {
- 		exclude module: 'log4j-to-slf4j'
- 		exclude module: 'log4j-api'
- 		exclude module: 'slf4j-log4j12'
- 		exclude module: 'log4j'
- 		exclude module: 'slf4j-log4j12'
- 	}
+
+    def excludeLog4j = {
+        exclude module: 'log4j-to-slf4j'
+        exclude module: 'log4j-api'
+        exclude module: 'slf4j-log4j12'
+        exclude module: 'log4j'
+        exclude module: 'slf4j-log4j12'
+
+    }
     
+	// dependencies for development time
+ 	compile ('ai.libs:jaicore-basic:0.2.1', excludeLog4j) 
+ 	
+ 	compile("mysql:mysql-connector-java:8.0.19", excludeLog4j) 
+ 	
+ 	compile("commons-codec:commons-codec:1.11", excludeLog4j)
+
+	compile("org.springframework.boot:spring-boot-starter-data-jpa", excludeLog4j)
+
+    compile("org.springframework.boot:spring-boot-starter-web", excludeLog4j)
+
+	compileOnly("org.projectlombok:lombok", excludeLog4j)
+
+	annotationProcessor("org.projectlombok:lombok", excludeLog4j) 
+	
+	compile("org.apache.httpcomponents:httpclient:4.5.10", excludeLog4j)
+
     runtime("org.springframework.boot:spring-boot-devtools")
     
     testCompile("junit:junit")
 }
 
 bootJar {
-	baseName = 'sql-rest-server'
-	version = '0.1.0'
+	archiveBaseName.set 'sql-rest-server'
+	archiveVersion.set '0.1.0'
 }
 
 configurations {
