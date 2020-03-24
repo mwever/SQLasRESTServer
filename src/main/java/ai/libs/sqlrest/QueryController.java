@@ -34,7 +34,7 @@ public class QueryController {
 
 	private void ensureAdminAdapterAvailable() {
 		if (adminAdapter == null) {
-			adminAdapter = new SQLAdapter(CONFIG.getDBHost(), CONFIG.getAdminDBUser(), CONFIG.getAdminDBPassword(), CONFIG.getAdminDBName());
+			adminAdapter = CONFIG.createAdminAdapter();
 		}
 	}
 
@@ -64,7 +64,7 @@ public class QueryController {
 		}
 		IKVStore connectionDescription = res.get(0);
 		return IntStream.range(0, numAdapterInstances)
-				.mapToObj(x -> new SQLAdapter(CONFIG.getDBHost(), connectionDescription.getAsString("db_user"), connectionDescription.getAsString("db_passwd"), connectionDescription.getAsString("db_name"))).collect(Collectors.toList());
+				.mapToObj(x -> new SQLAdapter(CONFIG.getDBHost(), connectionDescription.getAsString("db_user"), connectionDescription.getAsString("db_passwd"), connectionDescription.getAsString("db_name"), CONFIG.getDBPropUseSsl())).collect(Collectors.toList());
 	}
 
 	private SQLAdapter getConnector(final String token) throws SQLException {
