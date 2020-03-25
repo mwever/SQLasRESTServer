@@ -135,7 +135,7 @@ task prepareJMHOutputDir {
 }
 def getExcludedBenchmarks() {
     return [
-        'BenchmarkLoop'
+            'Parallel'
     ]
 }
 task jmh(type: JavaExec, dependsOn: [jmhClasses, prepareJMHOutputDir]) {

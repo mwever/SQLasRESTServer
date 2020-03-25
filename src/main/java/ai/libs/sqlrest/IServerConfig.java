@@ -20,7 +20,10 @@ public interface IServerConfig extends Mutable {
 	public static final String K_ADMIN_DB_USER = "db.backend.user";
 	public static final String K_ADMIN_DB_PASSWD = "db.backend.passwd";
 
-	public static final String K_NUM_ADAPTER_INSTANCES = "server.adapter.instances";
+    public static final String K_NUM_ADAPTER_INSTANCES = "server.adapter.instances";
+    public static final String K_NUM_ADAPTER_INSTANCES_LIMIT = "server.adapter.instancesLimit";
+
+    public static final String K_IN_PRODUCTION = "server.inProduction";
 
     @Key(K_DB_HOST)
     public String getDBHost();
@@ -44,17 +47,28 @@ public interface IServerConfig extends Mutable {
 	@Key(K_ADMIN_DB_NAME)
 	public String getAdminDBName();
 
-	@Key(K_NUM_ADAPTER_INSTANCES)
+    @Key(K_NUM_ADAPTER_INSTANCES)
     @DefaultValue("1")
-	public int getNumAdapterInstances();
+    public int getNumAdapterInstances();
+
+    @Key(K_NUM_ADAPTER_INSTANCES_LIMIT)
+    @DefaultValue("16")
+    public int getNumAdapterInstancesLimit();
+
+    @Key(K_IN_PRODUCTION)
+    @DefaultValue("true")
+    public boolean isInProduction();
 
 	default SQLAdapter createAdminAdapter() {
+
 //	    Properties connectionProps = new Properties();
 //        connectionProps.put("verifyServerCertificate", getDBPropUseSsl());
 //        connectionProps.put("requireSSL", getDBPropRequireSsl());
 //        connectionProps.put("useSSL", getDBPropUseSsl());
 
-        SQLAdapter adminAdapter = new SQLAdapter(getDBHost(), getAdminDBUser(), getAdminDBPassword(), getAdminDBName(), getDBPropUseSsl());
+        SQLAdapter adminAdapter = new SQLAdapter(getDBHost(), getAdminDBUser(),
+                getAdminDBPassword(), getAdminDBName(),
+                getDBPropUseSsl());
         return adminAdapter;
     }
 

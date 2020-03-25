@@ -15,6 +15,9 @@ import java.util.stream.IntStream;
 
 import org.aeonbits.owner.ConfigCache;
 import org.api4.java.datastructure.kvstore.IKVStore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -24,6 +27,8 @@ import ai.libs.sqlrest.model.SQLQuery;
 
 @RestController
 public class QueryController {
+
+    private final static Logger logger = LoggerFactory.getLogger(QueryController.class);
 
 	private static final IServerConfig CONFIG = ConfigCache.getOrCreate(IServerConfig.class);
 	private static SQLAdapter adminAdapter = null;
@@ -111,6 +116,36 @@ public class QueryController {
 		}
 		return this.getConnector(query.getToken()).insert(query.getQuery(), new LinkedList<>());
 	}
+
+	@PostMapping("/numadapter")
+    public void setNumAdapterInstances(@RequestBody final Integer numberOfAdapter) {
+	    if(CONFIG.isInProduction()) {
+	        throw new IllegalStateException("Operation not permitted. The service is in production.");
+        }
+        if(numberOfAdapter == null) {
+            throw new IllegalArgumentException("Number of adapter instances is undefined");
+        }
+        if(numberOfAdapter < 1) {
+            throw new IllegalArgumentException("Number of adapter instances cannot be smaller than 1. Given: " + numberOfAdapter);
+        }
+        if(numberOfAdapter > CONFIG.getNumAdapterInstancesLimit()) {
+            throw new IllegalArgumentException(
+                    String.format("Number of adapter instances cannot exceed the defined limit of %d." +
+                    " Given: %d", CONFIG.getNumAdapterInstancesLimit(), numberOfAdapter));
+        }
+        lock.lock();
+        try {
+            CONFIG.setProperty(IServerConfig.K_NUM_ADAPTER_INSTANCES, String.valueOf(numberOfAdapter));
+            logger.info("Set number of adapters = {}", numberOfAdapter);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @GetMapping("/numadapter")
+    public Integer getNumAdapterInstances() {
+	    return CONFIG.getNumAdapterInstances();
+    }
 
 	private boolean isAllowedQuery(final String query) {
 		if (query.contains(";")) {
