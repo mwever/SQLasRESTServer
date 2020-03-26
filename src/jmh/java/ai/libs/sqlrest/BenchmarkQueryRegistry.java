@@ -21,6 +21,17 @@ public class BenchmarkQueryRegistry {
                     "FROM %s " +
                     "ORDER BY RAND() LIMIT %d";
 
+    public static final String TIME_NULL_RANDOM_SELECT_JOIN =
+            "SELECT *" +
+            "FROM %s" +
+            "WHERE RAND() < (" +
+                "SELECT ((%d/COUNT(*))*10)" +
+                "FROM %s" +
+                "WHERE time_started is null)" +
+            "AND time_started is null" +
+            "ORDER BY RAND() LIMIT %d";
+
+
     public static final String TIME_NULL_RANDOM_SELECT_SUBQUERY =
             "SELECT * " +
             "FROM ( " +
@@ -76,6 +87,21 @@ public class BenchmarkQueryRegistry {
                 break;
             case "1000-random":
                 sqlQuery = String.format(BenchmarkQueryRegistry.RANDOM_SELECT, tableName, 1000);
+                break;
+
+
+            case "1-random-time-null-join":
+                sqlQuery = String.format(BenchmarkQueryRegistry.TIME_NULL_RANDOM_SELECT_JOIN, tableName, 1, tableName, 1);
+                break;
+            case "10-random-time-null-join":
+                sqlQuery = String.format(BenchmarkQueryRegistry.TIME_NULL_RANDOM_SELECT_JOIN, tableName, 10, tableName, 10);
+                break;
+            case "100-random-time-null-join":
+                sqlQuery = String.format(BenchmarkQueryRegistry.TIME_NULL_RANDOM_SELECT_JOIN, tableName, 100, tableName, 100);
+                break;
+            case "1000-random-time-null-join":
+                sqlQuery = String.format(BenchmarkQueryRegistry.TIME_NULL_RANDOM_SELECT_JOIN, tableName, 1000,
+                        tableName, 1000);
                 break;
 
 

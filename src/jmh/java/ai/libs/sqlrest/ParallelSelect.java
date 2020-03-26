@@ -34,8 +34,8 @@ import java.util.stream.IntStream;
 @OutputTimeUnit(TimeUnit.SECONDS)
 @Threads(1)
 @Fork(value = 1, jvmArgs = {"-Xms4G", "-Xmx8G"})
-@Warmup(iterations = 1, time = 1)
-@Measurement(iterations = 3, time = 1)
+@Warmup(iterations = 0, time = 1)
+@Measurement(iterations = 2, time = 1)
 @State(Scope.Benchmark)
 public class ParallelSelect {
 
@@ -49,34 +49,34 @@ public class ParallelSelect {
 
     @Param({
             "1-random-time-null",
-            "100-random-time-null",
-            "select-1",
-            "select-100"
+//            "100-random-time-null",
+//            "select-1",
+//            "select-100"
     }) // each entry is 3.5 kByte
     private String query;
 
     @Param({
-        "1", "2", "8", "16"
+        "1", "32", "128"
     })
     private String numServiceAdapters;
 
     @Param({
-            "4", "16", "32"
+            "32", "128", "1024"
     })
     private String numWorkers;
-
-    @Param({
-            "256"
-    })
-    private String numJobs;
+//
+//    @Param({
+//            "256"
+//    })
+//    private String numJobs;
 
     private SQLQuery queryObj;
 
     private ExecutorService executor;
 
-    private int numberOfJobs = 256;
+    private int numberOfJobs;
 
-    private long resultFetchTimeout = TimeUnit.SECONDS.toMillis(30);
+    private long resultFetchTimeout = TimeUnit.MINUTES.toMillis(30);
 
     private void createQuery() {
         String tableName = BENCHMARK_CONFIG.getBenchmarkTable();
@@ -105,7 +105,7 @@ public class ParallelSelect {
         createQuery();
         setServiceAdapters(state.getWebClient());
         createExecutor();
-        numberOfJobs = Integer.parseInt(numJobs);
+        numberOfJobs = Integer.parseInt(numWorkers) * 2;
     }
 
     @TearDown

@@ -10,52 +10,41 @@ import org.openjdk.jmh.infra.Blackhole;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.web.reactive.function.BodyInserters;
-import org.springframework.web.reactive.function.client.ExchangeStrategies;
-import org.springframework.web.reactive.function.client.WebClient;
 
-import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-/*
- * Assumes that the service is running
- */
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 @State(Scope.Benchmark)
 @Fork(value = 2, jvmArgs = {"-Xms4G", "-Xmx8G"})
-@Warmup(iterations = 2, time = 2)
-@Measurement(iterations = 6, time = 8)
-public class IterativeSelect {
+@Warmup(iterations = 1, time = 10)
+@Measurement(iterations = 4, time = 15)
+public class OverloadedDB {
 
-    private static final Logger logger = LoggerFactory.getLogger(IterativeSelect.class);
+    private static final Logger logger = LoggerFactory.getLogger(OverloadedDB.class);
 
     private static final ParameterizedTypeReference<List<KVStore>> keyStoreListType = new ParameterizedTypeReference<List<KVStore>>() {};
 
-    private static final IBenchmarkConfig BENCHMARK_CONFIG = ConfigCache.getOrCreate(IBenchmarkConfig.class);
-
     private static final IServerConfig SERVER_CONFIG = ConfigCache.getOrCreate(IServerConfig.class);
 
+    private static final IBenchmarkConfig BENCHMARK_CONFIG = ConfigCache.getOrCreate(IBenchmarkConfig.class);
+
     @Param({
-            "1-random-time-null",
-            "100-random-time-null",
-            "1-random",
-            "100-random",
-            "1-time-null",
-            "100-time-null",
-            "select-1",
             "select-100",
-            "1-random-time-null-join",
-            "100-random-time-null-join",
-            "1-random-time-null-subquery",
-            "100-random-time-null-subquery"
-    }) // each entry is 3.5 kByte
+    })
     private String query;
 
+    @Param({
+            "512", "1024", "2048"
+    })
+    private String numConnections;
+
     private SQLQuery queryObj;
+
+    private List<SQLAdapter> openConnections;
 
     private void createQuery() {
         String tableName = BENCHMARK_CONFIG.getBenchmarkTable();
@@ -63,21 +52,30 @@ public class IterativeSelect {
         queryObj = new SQLQuery(BENCHMARK_CONFIG.getBenchmarkToken(), sqlQuery);
     }
 
-    @Setup
-    public void setup() throws SQLException {
-        createQuery();
+    private void openConnections(SQLClientState state) throws SQLException {
+        int numberConnections = Integer.parseInt(numConnections);
+        openConnections = new ArrayList<>(numberConnections);
+        String tableName = BENCHMARK_CONFIG.getBenchmarkTable();
+        String quickQuery = BenchmarkQueryRegistry.createQuery("select-1", tableName);
+        SQLQuery quickSQLQuery = new SQLQuery(BENCHMARK_CONFIG.getBenchmarkToken(), quickQuery);
+        for (int i = 0; i < numberConnections; i++) {
+            SQLAdapter adapter = new SQLAdapter(SERVER_CONFIG.getDBHost(),
+                    state.getUserName(), state.getPassword(), state.getDbName(), SERVER_CONFIG.getDBPropUseSsl());
+            List<IKVStore> resultsOfQuery = adapter.getResultsOfQuery(quickQuery);
+            assert resultsOfQuery != null && !resultsOfQuery.isEmpty();
+            openConnections.add(adapter);
+        }
     }
 
-    @Benchmark
-    public void singleQueryOverService(SQLClientState state, Blackhole bh) throws IOException {
-        WebClient webClient = state.getWebClient();
-        WebClient.RequestHeadersSpec<?> request
-                = webClient.post()
-                .uri("query")
-                .body(BodyInserters.fromValue(queryObj));
-        List<KVStore> end = request.retrieve().bodyToMono(keyStoreListType).block();
-        assert end != null;
-        bh.consume(end);
+    @Setup
+    public void setup(SQLClientState clientState) throws SQLException {
+        createQuery();
+        openConnections(clientState);
+    }
+
+    @TearDown
+    public void teardown() {
+        openConnections.forEach(SQLAdapter::close);
     }
 
     @Benchmark

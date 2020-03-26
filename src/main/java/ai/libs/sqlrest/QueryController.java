@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
@@ -119,9 +120,7 @@ public class QueryController {
 
 	@PostMapping("/numadapter")
     public void setNumAdapterInstances(@RequestBody final Integer numberOfAdapter) {
-	    if(CONFIG.isInProduction()) {
-	        throw new IllegalStateException("Operation not permitted. The service is in production.");
-        }
+        assertNotInProduction();
         if(numberOfAdapter == null) {
             throw new IllegalArgumentException("Number of adapter instances is undefined");
         }
@@ -144,7 +143,14 @@ public class QueryController {
 
     @GetMapping("/numadapter")
     public Integer getNumAdapterInstances() {
+        assertNotInProduction();
 	    return CONFIG.getNumAdapterInstances();
+    }
+
+    @GetMapping("/block")
+    public void blockRequest() throws InterruptedException {
+	    assertNotInProduction();
+	    Thread.sleep(TimeUnit.HOURS.toMillis(1));
     }
 
 	private boolean isAllowedQuery(final String query) {
@@ -153,5 +159,11 @@ public class QueryController {
 		}
 		return true;
 	}
+
+    private void assertNotInProduction() {
+        if(CONFIG.isInProduction()) {
+            throw new IllegalStateException("Operation not permitted. The service is in production.");
+        }
+    }
 
 }

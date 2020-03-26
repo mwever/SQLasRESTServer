@@ -144,11 +144,11 @@ task jmh(type: JavaExec, dependsOn: [jmhClasses, prepareJMHOutputDir]) {
     def excludedBenchmarks = getExcludedBenchmarks()
     def excludedBenchmarkStr = excludedBenchmarks.collect {".*${it}.*"}.join(",")
     def currentTimeStr = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")
-                            .format(java.time.LocalDateTime.now())
+            .format(java.time.LocalDateTime.now())
     args '-e', excludedBenchmarkStr, // exclude benchmarks
             '-rf', 'text', // result format
             '-rff', "out/benchmark-results-${currentTimeStr}.txt" // result file
-            // ,'-bm', 'all' // benchmark mode
+    // ,'-bm', 'all' // benchmark mode
 
     jvmArgs '-ea'
 }
@@ -158,6 +158,53 @@ dependencies {
         exclude module: "logback-classic"
     }
     jmhImplementation 'org.openjdk.jmh:jmh-core:1.21'
+    jmhImplementation 'org.apache.httpcomponents:httpclient:4.5.10'
     jmhAnnotationProcessor 'org.openjdk.jmh:jmh-generator-annprocess:1.21'
 }
 classes.finalizedBy(jmhClasses)
+
+
+task jmhIterativeSelect(type: JavaExec, dependsOn: [jmhClasses, prepareJMHOutputDir]) {
+    main = 'org.openjdk.jmh.Main'
+    classpath = sourceSets.jmh.runtimeClasspath + sourceSets.jmh.compileClasspath
+    def currentTimeStr = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")
+            .format(java.time.LocalDateTime.now())
+    args 'IterativeSelect',
+            '-rf', 'text', // result format
+            '-rff', "out/benchmark-results-${currentTimeStr}.txt" // result file
+
+    jvmArgs '-ea'
+}
+task jmhBatchSelect(type: JavaExec, dependsOn: [jmhClasses, prepareJMHOutputDir]) {
+    main = 'org.openjdk.jmh.Main'
+    classpath = sourceSets.jmh.runtimeClasspath + sourceSets.jmh.compileClasspath
+    def currentTimeStr = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")
+            .format(java.time.LocalDateTime.now())
+    args 'ParallelSelect',
+            '-rf', 'text', // result format
+            '-rff', "out/benchmark-results-${currentTimeStr}.txt" // result file
+
+    jvmArgs '-ea'
+}
+task jmhOverloaded(type: JavaExec, dependsOn: [jmhClasses, prepareJMHOutputDir]) {
+    main = 'org.openjdk.jmh.Main'
+    classpath = sourceSets.jmh.runtimeClasspath + sourceSets.jmh.compileClasspath
+    def currentTimeStr = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")
+            .format(java.time.LocalDateTime.now())
+    args 'Overloaded*',
+            '-rf', 'text', // result format
+            '-rff', "out/benchmark-results-${currentTimeStr}.txt" // result file
+
+    jvmArgs '-ea'
+}
+task jmhHttpClients(type: JavaExec, dependsOn: [jmhClasses, prepareJMHOutputDir]) {
+    main = 'org.openjdk.jmh.Main'
+    classpath = sourceSets.jmh.runtimeClasspath + sourceSets.jmh.compileClasspath
+    def currentTimeStr = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")
+            .format(java.time.LocalDateTime.now())
+    args 'HttpClientPerformance',
+            '-rf', 'text', // result format
+            '-rff', "out/benchmark-results-${currentTimeStr}.txt" // result file
+
+    jvmArgs '-ea'
+}
