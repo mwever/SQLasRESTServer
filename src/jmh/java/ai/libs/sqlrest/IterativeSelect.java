@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 @State(Scope.Benchmark)
-@Fork(value = 2, jvmArgs = {"-Xms4G", "-Xmx8G"})
+@Fork(value = 1, jvmArgs = {"-Xms4G", "-Xmx8G"})
 @Warmup(iterations = 2, time = 2)
 @Measurement(iterations = 6, time = 8)
 public class IterativeSelect {
@@ -42,16 +42,16 @@ public class IterativeSelect {
     @Param({
             "1-random-time-null",
             "100-random-time-null",
-            "1-random",
-            "100-random",
-            "1-time-null",
-            "100-time-null",
-            "select-1",
-            "select-100",
+//            "1-random",
+//            "100-random",
+//            "1-time-null",
+//            "100-time-null",
+//            "select-1",
+//            "select-100",
             "1-random-time-null-join",
             "100-random-time-null-join",
-            "1-random-time-null-subquery",
-            "100-random-time-null-subquery"
+//            "1-random-time-null-subquery",
+//            "100-random-time-null-subquery"
     }) // each entry is 3.5 kByte
     private String query;
 

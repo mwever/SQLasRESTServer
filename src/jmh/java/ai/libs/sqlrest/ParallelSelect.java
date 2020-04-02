@@ -34,8 +34,8 @@ import java.util.stream.IntStream;
 @OutputTimeUnit(TimeUnit.SECONDS)
 @Threads(1)
 @Fork(value = 1, jvmArgs = {"-Xms4G", "-Xmx8G"})
-@Warmup(iterations = 0, time = 1)
-@Measurement(iterations = 2, time = 1)
+@Warmup(iterations = 4, time = 1)
+@Measurement(iterations = 3, time = 1)
 @State(Scope.Benchmark)
 public class ParallelSelect {
 
@@ -48,10 +48,10 @@ public class ParallelSelect {
     private static final IServerConfig SERVER_CONFIG = ConfigCache.getOrCreate(IServerConfig.class);
 
     @Param({
-            "1-random-time-null",
+//            "1-random-time-null",
 //            "100-random-time-null",
-//            "select-1",
-//            "select-100"
+            "select-1",
+            "select-100"
     }) // each entry is 3.5 kByte
     private String query;
 
@@ -61,7 +61,7 @@ public class ParallelSelect {
     private String numServiceAdapters;
 
     @Param({
-            "32", "128", "1024"
+            "32", "128", "512"
     })
     private String numWorkers;
 //

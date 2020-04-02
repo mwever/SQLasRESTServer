@@ -22,13 +22,13 @@ public class BenchmarkQueryRegistry {
                     "ORDER BY RAND() LIMIT %d";
 
     public static final String TIME_NULL_RANDOM_SELECT_JOIN =
-            "SELECT *" +
-            "FROM %s" +
+            "SELECT * " +
+            "FROM %s " +
             "WHERE RAND() < (" +
-                "SELECT ((%d/COUNT(*))*10)" +
-                "FROM %s" +
-                "WHERE time_started is null)" +
-            "AND time_started is null" +
+                "SELECT ((%d/COUNT(*))*10) " +
+                "FROM %s " +
+                "WHERE time_started is null) " +
+            "AND time_started is null " +
             "ORDER BY RAND() LIMIT %d";
 
 
