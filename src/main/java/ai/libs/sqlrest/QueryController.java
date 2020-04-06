@@ -8,17 +8,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.aeonbits.owner.ConfigCache;
 import org.api4.java.datastructure.kvstore.IKVStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,22 +28,29 @@ public class QueryController {
 
     private final static Logger logger = LoggerFactory.getLogger(QueryController.class);
 
-	private static final IServerConfig CONFIG = ConfigCache.getOrCreate(IServerConfig.class);
+    private final IServerConfig config;
+
 	private static SQLAdapter adminAdapter = null;
+
 	private static Map<String, List<SQLAdapter>> adapterMap = new HashMap<>();
-	private static Lock lock = new ReentrantLock();
+
+	private static Lock lock = new ReentrantLock(); // This lock synchronizes the access to adapterMap
 
 	private static int numAdapterInstances = 10;
 
-	private void ensureAdminAdapterAvailable() {
+    public QueryController(IServerConfig config) {
+        this.config = config;
+    }
+
+    private void ensureAdminAdapterAvailable() {
 		if (adminAdapter == null) {
-			adminAdapter = CONFIG.createAdminAdapter();
+			adminAdapter = config.createAdminAdapter();
 		}
 	}
 
 	private void checkNumInstancesConfig() throws SQLException {
-		if (numAdapterInstances != CONFIG.getNumAdapterInstances()) {
-			int newNumInstances = CONFIG.getNumAdapterInstances();
+		if (numAdapterInstances != config.getNumAdapterInstances()) {
+			int newNumInstances = config.getNumAdapterInstances();
 			for (Entry<String, List<SQLAdapter>> adaptersEntry : adapterMap.entrySet()) {
 				if (adaptersEntry.getValue().size() < newNumInstances) {
 					adaptersEntry.getValue().addAll(this.createAdaptersForToken(adaptersEntry.getKey(), newNumInstances - adaptersEntry.getValue().size()));
@@ -70,7 +74,7 @@ public class QueryController {
 		}
 		IKVStore connectionDescription = res.get(0);
 		return IntStream.range(0, numAdapterInstances)
-				.mapToObj(x -> new SQLAdapter(CONFIG.getDBHost(), connectionDescription.getAsString("db_user"), connectionDescription.getAsString("db_passwd"), connectionDescription.getAsString("db_name"), CONFIG.getDBPropUseSsl())).collect(Collectors.toList());
+				.mapToObj(x -> new SQLAdapter(config.getDBHost(), connectionDescription.getAsString("db_user"), connectionDescription.getAsString("db_passwd"), connectionDescription.getAsString("db_name"), config.getDBPropUseSsl())).collect(Collectors.toList());
 	}
 
 	private SQLAdapter getConnector(final String token) throws SQLException {
@@ -90,7 +94,7 @@ public class QueryController {
 	@PostMapping("/query")
 	public List<IKVStore> query(@RequestBody final SQLQuery query) throws SQLException, IOException {
 		try {
-			this.isAllowedQuery(query.getQuery());
+			this.assertLegalQuery(query.getQuery());
 		} catch (Exception e) {
 			throw new IllegalArgumentException("Query is not allowed", e);
 		}
@@ -100,7 +104,7 @@ public class QueryController {
 	@PostMapping("/update")
 	public int update(@RequestBody final SQLQuery query) throws SQLException {
 		try {
-			this.isAllowedQuery(query.getQuery());
+			this.assertLegalQuery(query.getQuery());
 		} catch (Exception e) {
 			throw new IllegalArgumentException("Query is not allowed", e);
 		}
@@ -111,59 +115,18 @@ public class QueryController {
 	@PostMapping("/insert")
 	public int[] insert(@RequestBody final SQLQuery query) throws SQLException {
 		try {
-			this.isAllowedQuery(query.getQuery());
+			this.assertLegalQuery(query.getQuery());
 		} catch (Exception e) {
 			throw new IllegalArgumentException("Query is not allowed", e);
 		}
 		return this.getConnector(query.getToken()).insert(query.getQuery(), new LinkedList<>());
 	}
 
-	@PostMapping("/numadapter")
-    public void setNumAdapterInstances(@RequestBody final Integer numberOfAdapter) {
-        assertNotInProduction();
-        if(numberOfAdapter == null) {
-            throw new IllegalArgumentException("Number of adapter instances is undefined");
-        }
-        if(numberOfAdapter < 1) {
-            throw new IllegalArgumentException("Number of adapter instances cannot be smaller than 1. Given: " + numberOfAdapter);
-        }
-        if(numberOfAdapter > CONFIG.getNumAdapterInstancesLimit()) {
-            throw new IllegalArgumentException(
-                    String.format("Number of adapter instances cannot exceed the defined limit of %d." +
-                    " Given: %d", CONFIG.getNumAdapterInstancesLimit(), numberOfAdapter));
-        }
-        lock.lock();
-        try {
-            CONFIG.setProperty(IServerConfig.K_NUM_ADAPTER_INSTANCES, String.valueOf(numberOfAdapter));
-            logger.info("Set number of adapters = {}", numberOfAdapter);
-        } finally {
-            lock.unlock();
-        }
-    }
 
-    @GetMapping("/numadapter")
-    public Integer getNumAdapterInstances() {
-        assertNotInProduction();
-	    return CONFIG.getNumAdapterInstances();
-    }
-
-    @GetMapping("/block")
-    public void blockRequest() throws InterruptedException {
-	    assertNotInProduction();
-	    Thread.sleep(TimeUnit.HOURS.toMillis(1));
-    }
-
-	private boolean isAllowedQuery(final String query) {
+	private void assertLegalQuery(final String query) {
 		if (query.contains(";")) {
 			throw new IllegalArgumentException("Query contains semicolons (;) which is not allowed.");
 		}
-		return true;
-	}
-
-    private void assertNotInProduction() {
-        if(CONFIG.isInProduction()) {
-            throw new IllegalStateException("Operation not permitted. The service is in production.");
-        }
     }
 
 }

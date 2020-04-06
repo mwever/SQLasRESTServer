@@ -27,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 
 @State(Scope.Thread)
 public class SQLClientState {
+
     private static final IBenchmarkConfig BENCHMARK_CONFIG = ConfigCache.getOrCreate(IBenchmarkConfig.class);
 
     private static final IServerConfig SERVER_CONFIG = ConfigCache.getOrCreate(IServerConfig.class);

@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 @Fork(value = 2, jvmArgs = {"-Xms4G", "-Xmx8G"})
 @Warmup(iterations = 1, time = 10)
 @Measurement(iterations = 4, time = 15)
-public class OverloadedDB {
+public class OverloadedDB extends AbstractServiceBenchmark {
 
     private static final Logger logger = LoggerFactory.getLogger(OverloadedDB.class);
 

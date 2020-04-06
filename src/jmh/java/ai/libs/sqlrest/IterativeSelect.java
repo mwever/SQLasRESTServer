@@ -11,25 +11,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.web.reactive.function.BodyInserters;
-import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /*
  * Assumes that the service is running
  */
-@BenchmarkMode(Mode.AverageTime)
+@BenchmarkMode(Mode.SingleShotTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 @State(Scope.Benchmark)
-@Fork(value = 1, jvmArgs = {"-Xms4G", "-Xmx8G"})
-@Warmup(iterations = 2, time = 2)
-@Measurement(iterations = 6, time = 8)
-public class IterativeSelect {
+@Fork(value = 2, jvmArgs = {"-Xms4G", "-Xmx8G"})
+@Warmup(iterations = 6, time = 2)
+@Measurement(iterations = 10, time = 8)
+public class IterativeSelect extends AbstractServiceBenchmark {
 
     private static final Logger logger = LoggerFactory.getLogger(IterativeSelect.class);
 
@@ -42,12 +40,12 @@ public class IterativeSelect {
     @Param({
             "1-random-time-null",
             "100-random-time-null",
-//            "1-random",
-//            "100-random",
-//            "1-time-null",
-//            "100-time-null",
-//            "select-1",
-//            "select-100",
+            "1-random",
+            "100-random",
+            "1-time-null",
+            "100-time-null",
+            "select-1",
+            "select-100",
             "1-random-time-null-join",
             "100-random-time-null-join",
 //            "1-random-time-null-subquery",
@@ -64,9 +62,10 @@ public class IterativeSelect {
     }
 
     @Setup
-    public void setup() throws SQLException {
+    public void setup() {
         createQuery();
     }
+
 
     @Benchmark
     public void singleQueryOverService(SQLClientState state, Blackhole bh) throws IOException {

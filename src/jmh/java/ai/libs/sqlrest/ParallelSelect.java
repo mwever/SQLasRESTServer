@@ -37,7 +37,7 @@ import java.util.stream.IntStream;
 @Warmup(iterations = 4, time = 1)
 @Measurement(iterations = 3, time = 1)
 @State(Scope.Benchmark)
-public class ParallelSelect {
+public class ParallelSelect extends AbstractServiceBenchmark {
 
     private static final Logger logger = LoggerFactory.getLogger(ParallelSelect.class);
 
@@ -64,11 +64,11 @@ public class ParallelSelect {
             "32", "128", "512"
     })
     private String numWorkers;
-//
-//    @Param({
-//            "256"
-//    })
-//    private String numJobs;
+
+    @Param({
+            "256"
+    })
+    private String numJobs;
 
     private SQLQuery queryObj;
 
@@ -85,15 +85,18 @@ public class ParallelSelect {
     }
 
     private void setServiceAdapters(WebClient webClient) {
-        WebClient.RequestHeadersSpec<?> request = webClient.post()
-                .uri("numadapter")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(BodyInserters.fromValue(numServiceAdapters));
-        ResponseEntity<Void> response = request.retrieve().toBodilessEntity().block();
-        if(response == null || response.getStatusCode().isError()) {
-            throw new RuntimeException("Couldn't set service adapters");
-        }
+//        WebClient.RequestHeadersSpec<?> request = webClient.post()
+//                .uri("numadapter")
+//                .contentType(MediaType.APPLICATION_JSON)
+//                .body(BodyInserters.fromValue(numServiceAdapters));
+//        ResponseEntity<Void> response = request.retrieve().toBodilessEntity().block();
+//        if(response == null || response.getStatusCode().isError()) {
+//            throw new RuntimeException("Couldn't set service adapters");
+//        }
+        SQLRestServiceHandler.INSTANCE.setNumAdapters(Integer.parseInt(numServiceAdapters));
     }
+
+
 
     private void createExecutor() {
         executor = Executors.newFixedThreadPool(Integer.parseInt(numWorkers));
@@ -105,7 +108,8 @@ public class ParallelSelect {
         createQuery();
         setServiceAdapters(state.getWebClient());
         createExecutor();
-        numberOfJobs = Integer.parseInt(numWorkers) * 2;
+//        numberOfJobs = Integer.parseInt(numWorkers) * 2;
+        numberOfJobs = Integer.parseInt(numJobs);
     }
 
     @TearDown

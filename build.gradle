@@ -100,8 +100,19 @@ configurations {
 eclipse {
 	project.natures "org.eclipse.buildship.core.gradleprojectnature"
 }
+
 bootRun {
-    workingDir = rootDir.getAbsolutePath()
+    def propertyWorkingDir = project.properties["bootRun.workingDir"]
+    if(propertyWorkingDir != null) {
+        def workingDirFile = new File(propertyWorkingDir.toString())
+        workingDirFile.mkdirs()
+        if(!workingDirFile.isDirectory()) {
+            throw new IllegalArgumentException("Working directory cannot be set to ${propertyWorkingDir}. It isn't a directory.")
+        }
+        workingDir = propertyWorkingDir
+    } else {
+        workingDir = rootDir.getAbsolutePath()
+    }
 }
 
 
@@ -163,10 +174,13 @@ dependencies {
 }
 classes.finalizedBy(jmhClasses)
 
+def getJMGClassPath() {
+    return sourceSets.jmh.runtimeClasspath + sourceSets.jmh.compileClasspath
+}
 
-task jmhIterativeSelect(type: JavaExec, dependsOn: [jmhClasses, prepareJMHOutputDir]) {
+task jmhIterativeSelect(type: JavaExec, dependsOn: [classes, prepareJMHOutputDir]) {
     main = 'org.openjdk.jmh.Main'
-    classpath = sourceSets.jmh.runtimeClasspath + sourceSets.jmh.compileClasspath
+    classpath = getJMGClassPath()
     def currentTimeStr = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")
             .format(java.time.LocalDateTime.now())
     args 'IterativeSelect',
@@ -207,4 +221,15 @@ task jmhHttpClients(type: JavaExec, dependsOn: [jmhClasses, prepareJMHOutputDir]
             '-rff', "out/benchmark-results-${currentTimeStr}.txt" // result file
 
     jvmArgs '-ea'
+}
+
+
+task printcp(dependsOn:[classes]) {
+    def classpath = (
+            sourceSets.main.runtimeClasspath +
+            sourceSets.jmh.runtimeClasspath
+    ).files.join(File.pathSeparator)
+    doLast {
+        println(classpath)
+    }
 }

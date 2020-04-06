@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 @Fork(value = 2, jvmArgs = {"-Xms4G", "-Xmx8G"})
 @Warmup(iterations = 1, time = 10)
 @Measurement(iterations = 4, time = 15)
-public class OverloadedService {
+public class OverloadedService extends AbstractServiceBenchmark {
 
     private static final Logger logger = LoggerFactory.getLogger(OverloadedService.class);
 
