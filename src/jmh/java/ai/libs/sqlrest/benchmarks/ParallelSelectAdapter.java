@@ -48,11 +48,6 @@ public class ParallelSelectAdapter {
     private String query;
 
     @Param({
-            "1", "16"
-    })
-    private String numServiceAdapters;
-
-    @Param({
             "25", "99"
     })
     private String numWorkers;

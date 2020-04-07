@@ -1,6 +1,6 @@
 package ai.libs.sqlrest;
 
-import ai.libs.jaicore.db.sql.SQLAdapter;
+import ai.libs.jaicore.db.IDatabaseAdapter;
 import org.aeonbits.owner.ConfigCache;
 
 import java.sql.SQLException;
@@ -22,7 +22,7 @@ public class ISQLAdapterLimitedAccess implements ISQLAdapterAccess {
     }
 
     @Override
-    public SQLAdapter acquire(String token) throws SQLException, InterruptedException {
+    public IDatabaseAdapter acquire(String token) throws SQLException, InterruptedException {
         Semaphore permits = tokenPermitsMap.computeIfAbsent(token,
                 t -> new Semaphore(config.getNumAdapterAccessLimit()));
         permits.acquire();
@@ -30,7 +30,7 @@ public class ISQLAdapterLimitedAccess implements ISQLAdapterAccess {
     }
 
     @Override
-    public void release(SQLAdapter adapter, String token) throws SQLException {
+    public void release(IDatabaseAdapter adapter, String token) throws SQLException {
         Semaphore permits = tokenPermitsMap.get(token);
         if(permits == null) {
             throw new IllegalStateException("Permits wasn't initialized for token, but adapter is released.");

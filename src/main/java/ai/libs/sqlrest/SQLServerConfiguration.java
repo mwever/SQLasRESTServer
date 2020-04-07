@@ -32,4 +32,11 @@ public class SQLServerConfiguration {
         return impl;
     }
 
+    @Bean
+    SQLAdapterProvider getSQLAdapter() {
+        IServerConfig conf = ConfigCache.getOrCreate(IServerConfig.class);
+        return new DefaultSQLAdapterProvider();
+        // based on the config other implementations are chosen.
+    }
+
 }

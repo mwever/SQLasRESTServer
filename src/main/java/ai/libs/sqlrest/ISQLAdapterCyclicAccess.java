@@ -1,11 +1,8 @@
 package ai.libs.sqlrest;
 
-import ai.libs.jaicore.db.sql.SQLAdapter;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import ai.libs.jaicore.db.IDatabaseAdapter;
 
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -22,12 +19,12 @@ public class ISQLAdapterCyclicAccess implements ISQLAdapterAccess {
     }
 
     @Override
-    public SQLAdapter acquire(String token) throws SQLException {
+    public IDatabaseAdapter acquire(String token) throws SQLException {
         AtomicInteger atomicIndex
                 = tokenSQLAdapterIndexMap.computeIfAbsent(token, t -> new AtomicInteger(0));
         int currentIndex = atomicIndex.getAndIncrement();
         int readIndex = currentIndex;
-        List<SQLAdapter> adapters = adapterManager.getAdaptersFor(token);
+        List<IDatabaseAdapter> adapters = adapterManager.getAdaptersFor(token);
         int numAdapters = adapters.size();
         if(currentIndex < 0) {
             throw new IllegalStateException("The current index is negative: " + currentIndex);
@@ -40,7 +37,7 @@ public class ISQLAdapterCyclicAccess implements ISQLAdapterAccess {
     }
 
     @Override
-    public void release(SQLAdapter adapter, String token) {
+    public void release(IDatabaseAdapter adapter, String token) {
         // releasing doesn't do anything
     }
 }

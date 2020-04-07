@@ -1,5 +1,6 @@
 package ai.libs.sqlrest;
 
+import ai.libs.jaicore.db.IDatabaseAdapter;
 import ai.libs.jaicore.db.sql.SQLAdapter;
 import org.aeonbits.owner.ConfigCache;
 import org.api4.java.datastructure.kvstore.IKVStore;
@@ -8,9 +9,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class TokenConnectionHandle {
 
@@ -22,11 +20,11 @@ public class TokenConnectionHandle {
 
     private AtomicInteger numConnections;
 
-    private List<SQLAdapter> currentAdapters;
+    private List<IDatabaseAdapter> currentAdapters;
 
     public TokenConnectionHandle(String token) {
         this.token = token;
-        currentAdapters = new ArrayList<>();
+        currentAdapters = new ArrayList<IDatabaseAdapter>();
         numConnections = new AtomicInteger(0);
     }
 
@@ -47,7 +45,7 @@ public class TokenConnectionHandle {
         adminAdapter.close();
     }
 
-    public void requireNumConnectionsMatchesConfig() {
+    public void requireNumConnectionsMatchesConfig(SQLAdapterProvider provider) {
         int newNumConnections = config.getNumAdapterInstances();
         if(newNumConnections < 1) {
             throw new IllegalArgumentException("Number of connections needs to be positive: " + newNumConnections);
@@ -58,26 +56,26 @@ public class TokenConnectionHandle {
         }
         int oldVal = this.numConnections.getAndSet(newNumConnections);
         if(oldVal != newNumConnections) {
-            readjustNumConnections(newNumConnections);
+            readjustNumConnections(provider, newNumConnections);
         }
     }
 
-    private void readjustNumConnections(int newNumConnections) {
+    private void readjustNumConnections(SQLAdapterProvider provider, int newNumConnections) {
         synchronized (this) {
-            currentAdapters = new ArrayList<>(currentAdapters);
+            currentAdapters = new ArrayList<IDatabaseAdapter>(currentAdapters);
+            // Copy the list because maybe another thread has returned the original list and it is being used in parallel.
             while(newNumConnections < currentAdapters.size()) {
-                SQLAdapter toBeRemoved = currentAdapters.remove(0);
-                toBeRemoved.close();
+                IDatabaseAdapter toBeRemoved = currentAdapters.remove(0);
+                toBeRemoved.close(); // There is a small probability that the adapter is being used.
             }
             while(newNumConnections > currentAdapters.size()) {
-                SQLAdapter newAdapter = new SQLAdapter(config.getDBHost(),
-                        user, passwd, dbName, config.getDBPropUseSsl());
-                currentAdapters.add(newAdapter);
+                IDatabaseAdapter adapter = provider.get(config.getDBHost(), user, passwd, dbName);
+                currentAdapters.add(adapter);
             }
         }
     }
 
-    public List<SQLAdapter> getCurrentAdapters() {
+    public List<IDatabaseAdapter> getCurrentAdapters() {
         synchronized (this) {
             return currentAdapters;
         }

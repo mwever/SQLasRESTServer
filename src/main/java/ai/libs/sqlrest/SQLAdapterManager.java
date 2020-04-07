@@ -1,6 +1,7 @@
 package ai.libs.sqlrest;
 
-import ai.libs.jaicore.db.sql.SQLAdapter;
+import ai.libs.jaicore.db.IDatabaseAdapter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.sql.SQLException;
@@ -13,7 +14,14 @@ public class SQLAdapterManager {
 
     private Map<String, TokenConnectionHandle> tokenConnectionHandleMap = new ConcurrentHashMap<>();
 
-    public List<SQLAdapter> getAdaptersFor(String token) throws SQLException {
+    private SQLAdapterProvider provider;
+
+    @Autowired
+    public SQLAdapterManager(SQLAdapterProvider provider) {
+        this.provider = provider;
+    }
+
+    public List<IDatabaseAdapter> getAdaptersFor(String token) throws SQLException {
         TokenConnectionHandle handle = tokenConnectionHandleMap.computeIfAbsent(token, this::createTokenConnectionHandle);
 //        handle.requireNumConnectionsMatchesConfig();
         return handle.getCurrentAdapters();
@@ -26,7 +34,7 @@ public class SQLAdapterManager {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        handle.requireNumConnectionsMatchesConfig();
+        handle.requireNumConnectionsMatchesConfig(provider);
         return handle;
     }
 

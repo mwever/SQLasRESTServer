@@ -3,12 +3,8 @@ package ai.libs.sqlrest;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.Map.Entry;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
+import ai.libs.jaicore.db.IDatabaseAdapter;
 import org.aeonbits.owner.ConfigCache;
 import org.api4.java.datastructure.kvstore.IKVStore;
 import org.slf4j.Logger;
@@ -34,11 +30,11 @@ public class QueryController {
 	    this.isqlAdapterAccess = access;
     }
 
-	private SQLAdapter getConnector(final String token) throws SQLException, InterruptedException {
+	private IDatabaseAdapter getConnector(final String token) throws SQLException, InterruptedException {
 	    return isqlAdapterAccess.acquire(token);
 	}
 
-	private void giveBackConnector(SQLAdapter adapter, final String token) throws SQLException {
+	private void giveBackConnector(IDatabaseAdapter adapter, final String token) throws SQLException {
 	    isqlAdapterAccess.release(adapter, token);
     }
 
@@ -49,7 +45,7 @@ public class QueryController {
 		} catch (Exception e) {
 			throw new IllegalArgumentException("Query is not allowed", e);
 		}
-        SQLAdapter connector = null;
+        IDatabaseAdapter connector = null;
         String token = query.getToken();
         try {
             connector = this.getConnector(token);
@@ -67,7 +63,7 @@ public class QueryController {
 		} catch (Exception e) {
 			throw new IllegalArgumentException("Query is not allowed", e);
 		}
-        SQLAdapter connector = null;
+        IDatabaseAdapter connector = null;
         String token = query.getToken();
         try {
             connector = this.getConnector(token);
@@ -85,7 +81,7 @@ public class QueryController {
 		} catch (Exception e) {
 			throw new IllegalArgumentException("Query is not allowed", e);
 		}
-        SQLAdapter connector = null;
+        IDatabaseAdapter connector = null;
         String token = query.getToken();
         try {
             connector = this.getConnector(token);
