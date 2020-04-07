@@ -1,7 +1,8 @@
-package ai.libs.sqlrest;
+package ai.libs.sqlrest.benchmarks;
 
 import ai.libs.jaicore.basic.kvstore.KVStore;
 import ai.libs.jaicore.db.sql.SQLAdapter;
+import ai.libs.sqlrest.*;
 import ai.libs.sqlrest.model.SQLQuery;
 import org.aeonbits.owner.ConfigCache;
 import org.api4.java.datastructure.kvstore.IKVStore;
@@ -16,13 +17,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-@BenchmarkMode(Mode.AverageTime)
+@BenchmarkMode(Mode.SingleShotTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 @State(Scope.Benchmark)
 @Fork(value = 2, jvmArgs = {"-Xms4G", "-Xmx8G"})
-@Warmup(iterations = 1, time = 10)
+@Warmup(iterations = 4, time = 10)
 @Measurement(iterations = 4, time = 15)
-public class OverloadedDB extends AbstractServiceBenchmark {
+public class OverloadedDB  {
 
     private static final Logger logger = LoggerFactory.getLogger(OverloadedDB.class);
 

@@ -1,7 +1,11 @@
-package ai.libs.sqlrest;
+package ai.libs.sqlrest.benchmarks;
 
 import ai.libs.jaicore.basic.kvstore.KVStore;
 import ai.libs.jaicore.db.sql.SQLAdapter;
+import ai.libs.sqlrest.BenchmarkQueryRegistry;
+import ai.libs.sqlrest.IBenchmarkConfig;
+import ai.libs.sqlrest.IServerConfig;
+import ai.libs.sqlrest.SQLClientState;
 import ai.libs.sqlrest.model.SQLQuery;
 import org.aeonbits.owner.ConfigCache;
 import org.api4.java.datastructure.kvstore.IKVStore;
@@ -10,11 +14,7 @@ import org.openjdk.jmh.infra.Blackhole;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.web.reactive.function.BodyInserters;
-import org.springframework.web.reactive.function.client.WebClient;
 
-import java.io.IOException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;

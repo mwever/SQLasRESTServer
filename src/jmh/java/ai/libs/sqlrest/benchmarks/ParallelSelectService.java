@@ -1,6 +1,7 @@
-package ai.libs.sqlrest;
+package ai.libs.sqlrest.benchmarks;
 
 import ai.libs.jaicore.basic.kvstore.KVStore;
+import ai.libs.sqlrest.*;
 import ai.libs.sqlrest.model.SQLQuery;
 import org.aeonbits.owner.ConfigCache;
 import org.openjdk.jmh.annotations.*;
@@ -25,7 +26,7 @@ import java.util.concurrent.*;
 @Warmup(iterations = 4, time = 1)
 @Measurement(iterations = 3, time = 1)
 @State(Scope.Benchmark)
-public class ParallelSelectService extends AbstractServiceBenchmark {
+public class ParallelSelectService {
 
     private static final Logger logger = LoggerFactory.getLogger(ParallelSelectService.class);
 
@@ -104,7 +105,7 @@ public class ParallelSelectService extends AbstractServiceBenchmark {
 //        numberOfJobs = Integer.parseInt(numWorkers) * 2;
         numberOfJobs = Integer.parseInt(numJobs);
         SQLRestServiceHandler.INSTANCE.setAccessLimit(Integer.parseInt(limitedAccessNum));
-        super.startService(serviceState, state);
+        AbstractServiceBenchmark.startService(serviceState, state);
     }
 
 //    @Setup

@@ -4,9 +4,9 @@ import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 
-public class AbstractServiceBenchmark {
+public final class AbstractServiceBenchmark {
 
-    public void startService(SQLRestServiceState serviceState, SQLClientState clientState) {
+    public static void startService(SQLRestServiceState serviceState, SQLClientState clientState) {
         serviceState.start();
         serviceState.wait(clientState.getWebClient());
     }
