@@ -1,0 +1,25 @@
+Benchmark                                       (limitedAccessNum)  (numJobs)  (numServiceAdapters)  (numWorkers)     (query)  Mode  Cnt   Score     Error  Units
+ParallelSelectService.parallelQueryOverService                   0       2000                     1            25    select-1    ss    3   3.617 ±   5.451   s/op
+ParallelSelectService.parallelQueryOverService                   0       2000                     1            25  select-100    ss    3  45.657 ± 154.960   s/op
+ParallelSelectService.parallelQueryOverService                   0       2000                     1            99    select-1    ss    3   2.706 ±   6.250   s/op
+ParallelSelectService.parallelQueryOverService                   0       2000                     1            99  select-100    ss    3  36.856 ±   8.732   s/op
+ParallelSelectService.parallelQueryOverService                   0       2000                    16            25    select-1    ss    3   1.350 ±   1.885   s/op
+ParallelSelectService.parallelQueryOverService                   0       2000                    16            25  select-100    ss    3  18.406 ±  12.125   s/op
+ParallelSelectService.parallelQueryOverService                   0       2000                    16            99    select-1    ss    3   1.216 ±   1.831   s/op
+ParallelSelectService.parallelQueryOverService                   0       2000                    16            99  select-100    ss    3  21.997 ±   9.324   s/op
+ParallelSelectService.parallelQueryOverService                  16       2000                     1            25    select-1    ss    3   4.365 ±   2.071   s/op
+ParallelSelectService.parallelQueryOverService                  16       2000                     1            25  select-100    ss    3  48.758 ± 161.196   s/op
+ParallelSelectService.parallelQueryOverService                  16       2000                     1            99    select-1    ss    3   2.894 ±   2.542   s/op
+ParallelSelectService.parallelQueryOverService                  16       2000                     1            99  select-100    ss    3  34.439 ±   7.899   s/op
+ParallelSelectService.parallelQueryOverService                  16       2000                    16            25    select-1    ss    3   1.302 ±   1.505   s/op
+ParallelSelectService.parallelQueryOverService                  16       2000                    16            25  select-100    ss    3  18.412 ±  18.193   s/op
+ParallelSelectService.parallelQueryOverService                  16       2000                    16            99    select-1    ss    3   1.263 ±   2.045   s/op
+ParallelSelectService.parallelQueryOverService                  16       2000                    16            99  select-100    ss    3  17.907 ±   3.102   s/op
+ParallelSelectService.parallelQueryOverService                  64       2000                     1            25    select-1    ss    3   2.590 ±   2.814   s/op
+ParallelSelectService.parallelQueryOverService                  64       2000                     1            25  select-100    ss    3  35.076 ±   7.431   s/op
+ParallelSelectService.parallelQueryOverService                  64       2000                     1            99    select-1    ss    3   2.794 ±   2.726   s/op
+ParallelSelectService.parallelQueryOverService                  64       2000                     1            99  select-100    ss    3  35.010 ±  10.008   s/op
+ParallelSelectService.parallelQueryOverService                  64       2000                    16            25    select-1    ss    3   1.281 ±   1.397   s/op
+ParallelSelectService.parallelQueryOverService                  64       2000                    16            25  select-100    ss    3  18.573 ±  15.494   s/op
+ParallelSelectService.parallelQueryOverService                  64       2000                    16            99    select-1    ss    3   1.269 ±   2.716   s/op
+ParallelSelectService.parallelQueryOverService                  64       2000                    16            99  select-100    ss    3  19.344 ±   2.791   s/op
