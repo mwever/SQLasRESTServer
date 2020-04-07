@@ -20,8 +20,8 @@ public class BenchmarkHelperController {
 
     private final IServerConfig config;
 
-    public BenchmarkHelperController(IServerConfig config) {
-        this.config = config;
+    public BenchmarkHelperController() {
+        this.config = ConfigCache.getOrCreate(IServerConfig.class);
     }
 
     @PostMapping("/numadapter")

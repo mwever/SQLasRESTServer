@@ -7,25 +7,17 @@ import org.aeonbits.owner.ConfigCache;
 import org.api4.java.datastructure.kvstore.IKVStore;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
-import org.openjdk.jmh.infra.Control;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.reactive.function.BodyInserters;
-import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.servlet.function.ServerRequest;
 
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.*;
-import java.util.stream.IntStream;
 
 /*
  * Assumes that the service is running
@@ -37,9 +29,9 @@ import java.util.stream.IntStream;
 @Warmup(iterations = 4, time = 1)
 @Measurement(iterations = 3, time = 1)
 @State(Scope.Benchmark)
-public class ParallelSelect extends AbstractServiceBenchmark {
+public class ParallelSelectAdapter {
 
-    private static final Logger logger = LoggerFactory.getLogger(ParallelSelect.class);
+    private static final Logger logger = LoggerFactory.getLogger(ParallelSelectAdapter.class);
 
     private static final ParameterizedTypeReference<List<KVStore>> keyStoreListType = new ParameterizedTypeReference<List<KVStore>>() {};
 
@@ -56,17 +48,17 @@ public class ParallelSelect extends AbstractServiceBenchmark {
     private String query;
 
     @Param({
-        "1", "32", "128"
+            "1", "16"
     })
     private String numServiceAdapters;
 
     @Param({
-            "32", "128", "512"
+            "25", "99"
     })
     private String numWorkers;
 
     @Param({
-            "256"
+            "2000"
     })
     private String numJobs;
 
@@ -84,33 +76,23 @@ public class ParallelSelect extends AbstractServiceBenchmark {
         queryObj = new SQLQuery(BENCHMARK_CONFIG.getBenchmarkToken(), sqlQuery);
     }
 
-    private void setServiceAdapters(WebClient webClient) {
-//        WebClient.RequestHeadersSpec<?> request = webClient.post()
-//                .uri("numadapter")
-//                .contentType(MediaType.APPLICATION_JSON)
-//                .body(BodyInserters.fromValue(numServiceAdapters));
-//        ResponseEntity<Void> response = request.retrieve().toBodilessEntity().block();
-//        if(response == null || response.getStatusCode().isError()) {
-//            throw new RuntimeException("Couldn't set service adapters");
-//        }
-        SQLRestServiceHandler.INSTANCE.setNumAdapters(Integer.parseInt(numServiceAdapters));
-    }
-
-
-
     private void createExecutor() {
         executor = Executors.newFixedThreadPool(Integer.parseInt(numWorkers));
     }
 
-
     @Setup
     public void setup(SQLClientState state) {
         createQuery();
-        setServiceAdapters(state.getWebClient());
         createExecutor();
-//        numberOfJobs = Integer.parseInt(numWorkers) * 2;
         numberOfJobs = Integer.parseInt(numJobs);
     }
+
+//    @Setup
+//    public void flushDBHosts(SQLClientState state) throws IOException, SQLException {
+//        SQLAdapter adapter = new SQLAdapter(SERVER_CONFIG.getDBHost(),
+//                state.getUserName(), state.getPassword(), state.getDbName(), SERVER_CONFIG.getDBPropUseSsl());
+//        adapter.query("FLUSH TABLES; FLUSH HOSTS;");
+//    }
 
     @TearDown
     public void tearDown() throws InterruptedException {
@@ -118,36 +100,30 @@ public class ParallelSelect extends AbstractServiceBenchmark {
         executor.awaitTermination(10, TimeUnit.SECONDS);
     }
 
-    @Benchmark
-    public void parallelQueryOverService(SQLClientState state, Blackhole bh) throws InterruptedException, TimeoutException, ExecutionException {
-        WebClient webClient = state.getWebClient();
-        Callable<List<KVStore>> serviceCall = () -> {
-            WebClient.RequestHeadersSpec<?> request
-                    = webClient.post()
-                    .uri("query")
-                    .body(BodyInserters.fromValue(queryObj));
-            List<KVStore> end = request.retrieve().bodyToMono(keyStoreListType).block();
-            return end;
-        };
-        List<Future<List<KVStore>>> futureList = new ArrayList<>(numberOfJobs);
-        for (int i = 0; i < numberOfJobs; i++) {
-            futureList.add(executor.submit(serviceCall));
-        }
-        for (Future<List<KVStore>> future : futureList) {
-            bh.consume(future.get(resultFetchTimeout, TimeUnit.MILLISECONDS));
-        }
-    }
 
     @Benchmark
     public void parallelQueryOverFreshAdapters(SQLClientState state, Blackhole bh) throws InterruptedException, TimeoutException, ExecutionException {
-        if(Integer.parseInt(numServiceAdapters) > 1) {
-            throw new IllegalStateException("Parameter `numServiceAdapter` doesn't affect this adapter benchmarks.");
-        }
         Callable<List<IKVStore>> serviceCall = () -> {
             SQLAdapter freshAdapter = new SQLAdapter(SERVER_CONFIG.getDBHost(),
                     state.getUserName(), state.getPassword(), state.getDbName(), SERVER_CONFIG.getDBPropUseSsl());
             List<IKVStore> end = freshAdapter.getResultsOfQuery(queryObj.getQuery());
             freshAdapter.close();
+            return end;
+        };
+        List<Future<List<IKVStore>>> futureList = new ArrayList<>(numberOfJobs);
+        for (int i = 0; i < numberOfJobs; i++) {
+            futureList.add(executor.submit(serviceCall));
+        }
+        for (Future<List<IKVStore>> future : futureList) {
+            bh.consume(future.get(resultFetchTimeout, TimeUnit.MILLISECONDS));
+        }
+    }
+
+    @Benchmark
+    public void parallelQueryOverASingleAdapter(SQLClientState state, Blackhole bh) throws InterruptedException, TimeoutException, ExecutionException {
+        Callable<List<IKVStore>> serviceCall = () -> {
+            SQLAdapter adapter = state.getAdapter();
+            List<IKVStore> end = adapter.getResultsOfQuery(queryObj.getQuery());
             return end;
         };
         List<Future<List<IKVStore>>> futureList = new ArrayList<>(numberOfJobs);

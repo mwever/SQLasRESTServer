@@ -14,7 +14,7 @@
         <Root level="WARN">
             <AppenderRef ref="LogToConsole"/>
         </Root>
-        <Logger name="ai.libs.sqlrest" level="info" additivity="false">
+        <Logger name="ai.libs.sqlrest" level="WARN" additivity="false">
             <AppenderRef ref="LogToConsole"/>
         </Logger>
     </Loggers>

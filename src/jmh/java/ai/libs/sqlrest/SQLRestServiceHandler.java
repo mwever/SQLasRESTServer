@@ -106,14 +106,34 @@ public enum SQLRestServiceHandler {
     }
 
     public void setTomcatMaxThreads(int maxThreads) {
-        applicationProperties.put("server.tomcat.max-threads", maxThreads);
+        applicationProperties.put("server.tomcat.max-threads", String.valueOf(maxThreads));
     }
 
     public void setNumAdapters(int numAdapters) {
         if(numAdapters < 1 ) {
             throw new IllegalArgumentException("Number of adapters must be positive. Given: " + numAdapters);
         }
-        serverProperties.put(IServerConfig.K_NUM_ADAPTER_INSTANCES, numAdapters);
+        if(process != null && process.isAlive()) {
+            throw new IllegalStateException("Cannot change property after startup.");
+        }
+        serverProperties.put(IServerConfig.K_NUM_ADAPTER_INSTANCES, String.valueOf(numAdapters));
+    }
+
+    public void setAccessLimit(int accessLimit) {
+        if(accessLimit < 0)
+        {
+            throw new IllegalArgumentException("Access limit must be positive: " + accessLimit);
+        }
+        if(accessLimit == 0) {
+
+            serverProperties.put(IServerConfig.K_ADAPTER_ACCESS_RANDOM, String.valueOf(false));
+            serverProperties.put(IServerConfig.K_ADAPTER_LIMIT_ACCESS, String.valueOf(false));
+            serverProperties.put(IServerConfig.K_NUM_ADAPTER_ACCESS_LIMIT, String.valueOf(accessLimit));
+        } else {
+            serverProperties.put(IServerConfig.K_ADAPTER_ACCESS_RANDOM, String.valueOf(false));
+            serverProperties.put(IServerConfig.K_ADAPTER_LIMIT_ACCESS, String.valueOf(true));
+            serverProperties.put(IServerConfig.K_NUM_ADAPTER_ACCESS_LIMIT, String.valueOf(accessLimit));
+        }
     }
 
     private void loadExistingProperties(File propFile, Properties target) {

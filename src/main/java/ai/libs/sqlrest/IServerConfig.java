@@ -22,6 +22,10 @@ public interface IServerConfig extends Mutable {
 
     public static final String K_NUM_ADAPTER_INSTANCES = "server.adapter.instances";
     public static final String K_NUM_ADAPTER_INSTANCES_LIMIT = "server.adapter.instancesLimit";
+    public static final String K_NUM_ADAPTER_ACCESS_LIMIT = "server.adapter.accessLimit";
+
+    public static final String K_ADAPTER_ACCESS_RANDOM = "server.adapter.randomAccess";
+    public static final String K_ADAPTER_LIMIT_ACCESS = "server.adapter.accessLimited";
 
 
     @Key(K_DB_HOST)
@@ -53,6 +57,18 @@ public interface IServerConfig extends Mutable {
     @Key(K_NUM_ADAPTER_INSTANCES_LIMIT)
     @DefaultValue("16")
     public int getNumAdapterInstancesLimit();
+
+    @Key(K_NUM_ADAPTER_ACCESS_LIMIT)
+    @DefaultValue("1")
+    public int getNumAdapterAccessLimit();
+
+    @Key(K_ADAPTER_ACCESS_RANDOM)
+    @DefaultValue("true")
+    public boolean isAccessRandom();
+
+    @Key(K_ADAPTER_LIMIT_ACCESS)
+    @DefaultValue("false")
+    public boolean isAccessLimited();
 
 	default SQLAdapter createAdminAdapter() {
 

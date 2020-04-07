@@ -11,8 +11,7 @@ public class SQLRestServiceState {
 
     SQLRestServiceHandler handler = SQLRestServiceHandler.INSTANCE;
 
-    @Setup
-    public void setup() {
+    public void start() {
         handler.startService();
     }
 
