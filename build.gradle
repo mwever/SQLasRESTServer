@@ -118,8 +118,9 @@ bootRun {
 
 /*
  * Add JMH configuration for micro benchmarking:
- * More informations about: https://openjdk.java.net/projects/code-tools/jmh/
+ * For more information see: https://openjdk.java.net/projects/code-tools/jmh/
  */
+
 sourceSets {
     jmh {
         java.srcDirs = ['src/jmh/java']
@@ -144,41 +145,27 @@ task prepareJMHOutputDir {
         }
     }
 }
-def getExcludedBenchmarks() {
-    return [
-            'Parallel'
-    ]
-}
-//task jmh(type: JavaExec, dependsOn: [jmhClasses, prepareJMHOutputDir]) {
-//    main = 'org.openjdk.jmh.Main'
-//    classpath = sourceSets.jmh.runtimeClasspath + sourceSets.jmh.compileClasspath
-//    def excludedBenchmarks = getExcludedBenchmarks()
-//    def excludedBenchmarkStr = excludedBenchmarks.collect {".*${it}.*"}.join(",")
-//    def currentTimeStr = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")
-//            .format(java.time.LocalDateTime.now())
-//    args '-e', excludedBenchmarkStr, // exclude benchmarks
-//            '-rf', 'text', // result format
-//            '-rff', "out/benchmark-results-${currentTimeStr}.txt" // result file
-//    // ,'-bm', 'all' // benchmark mode
-//
-//    jvmArgs '-ea'
-//}
-
 
 task jmh(type: JavaExec, dependsOn: [jmhClasses, prepareJMHOutputDir]) {
     main = 'org.openjdk.jmh.Main'
     classpath = sourceSets.jmh.runtimeClasspath + sourceSets.jmh.compileClasspath
-    def currentTimeStr = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")
+
+    def currentTimeStr = java.time.format.DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
             .format(java.time.LocalDateTime.now())
-
-    def commandArgs = [
-            '-rf', 'text', // result format
-            '-rff', "out/benchmark-results-${currentTimeStr}.txt"] // result file
-    def benchmarkClass = project.properties["benchmark.Class"]
-    if(benchmarkClass != null)
-        commandArgs.add(0, benchmarkClass)
+    def commandArgs
+    def benchmarkClass = project.properties["benchmark.Class"] // read target benchmark from properties
+    if(benchmarkClass != null) {
+        commandArgs = [
+                benchmarkClass, // benchmark class
+                '-rf', 'text', // result format
+                '-rff', "out/${benchmarkClass}-${currentTimeStr}.txt"] // result file
+    } else {
+        // benchmark all `@Benchmark` classes
+        commandArgs = [
+                '-rf', 'text', // result format
+                '-rff', "out/benchmark-results-${currentTimeStr}.txt"] // result file
+    }
     args commandArgs
-
     jvmArgs '-ea'
 }
 

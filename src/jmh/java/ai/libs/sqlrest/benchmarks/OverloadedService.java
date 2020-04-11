@@ -21,9 +21,9 @@ import java.util.concurrent.TimeUnit;
 @BenchmarkMode(Mode.SingleShotTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 @State(Scope.Benchmark)
-@Fork(value = 2, jvmArgs = {"-Xms4G", "-Xmx8G"})
-@Warmup(iterations = 4, time = 10)
-@Measurement(iterations = 4, time = 15)
+@Fork(value = 1, jvmArgs = {"-Xms4G", "-Xmx8G"})
+@Warmup(iterations = 10, time = 10)
+@Measurement(iterations = 10, time = 15)
 public class OverloadedService {
 
     private static final Logger logger = LoggerFactory.getLogger(OverloadedService.class);
@@ -38,7 +38,7 @@ public class OverloadedService {
     private String query;
 
     @Param({
-            "512", "1024", "2048"
+            "512", "1024"
     })
     private String numConnections;
 
