@@ -65,7 +65,8 @@ public class IterativeSelect  {
     @Setup
     public void setup(SQLRestServiceState serviceState, SQLClientState state) {
         createQuery();
-        AbstractServiceBenchmark.startService(serviceState, state);
+        SQLBenchmarkUtil.startService(serviceState, state);
+        SQLBenchmarkUtil.flushDB();
     }
 
 

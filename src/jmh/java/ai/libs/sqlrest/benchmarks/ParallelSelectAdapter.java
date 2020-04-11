@@ -2,10 +2,7 @@ package ai.libs.sqlrest.benchmarks;
 
 import ai.libs.jaicore.basic.kvstore.KVStore;
 import ai.libs.jaicore.db.sql.SQLAdapter;
-import ai.libs.sqlrest.BenchmarkQueryRegistry;
-import ai.libs.sqlrest.IBenchmarkConfig;
-import ai.libs.sqlrest.IServerConfig;
-import ai.libs.sqlrest.SQLClientState;
+import ai.libs.sqlrest.*;
 import ai.libs.sqlrest.model.SQLQuery;
 import org.aeonbits.owner.ConfigCache;
 import org.api4.java.datastructure.kvstore.IKVStore;
@@ -80,6 +77,7 @@ public class ParallelSelectAdapter {
         createQuery();
         createExecutor();
         numberOfJobs = Integer.parseInt(numJobs);
+        SQLBenchmarkUtil.flushDB();
     }
 
 //    @Setup

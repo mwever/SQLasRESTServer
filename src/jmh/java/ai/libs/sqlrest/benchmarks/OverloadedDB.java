@@ -72,6 +72,7 @@ public class OverloadedDB  {
     public void setup(SQLClientState clientState) throws SQLException {
         createQuery();
         openConnections(clientState);
+        SQLBenchmarkUtil.flushDB();
     }
 
     @TearDown

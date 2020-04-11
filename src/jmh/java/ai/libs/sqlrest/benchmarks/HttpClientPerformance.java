@@ -65,7 +65,8 @@ public class HttpClientPerformance {
         createQuery();
         httpclient = HttpClients.createDefault();
         collectionType = mapper.getTypeFactory().constructCollectionType(List.class, KVStore.class);
-        AbstractServiceBenchmark.startService(serviceState, state);
+        SQLBenchmarkUtil.startService(serviceState, state);
+        SQLBenchmarkUtil.flushDB();
     }
 
     @Benchmark

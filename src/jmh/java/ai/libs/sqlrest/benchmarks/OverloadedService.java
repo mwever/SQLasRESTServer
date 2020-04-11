@@ -67,7 +67,8 @@ public class OverloadedService {
     public void setup(SQLRestServiceState serviceState, SQLClientState clientState) {
         createQuery();
         openConnections(clientState.getWebClient());
-        AbstractServiceBenchmark.startService(serviceState, clientState);
+        SQLBenchmarkUtil.startService(serviceState, clientState);
+        SQLBenchmarkUtil.flushDB();
     }
 
     @TearDown

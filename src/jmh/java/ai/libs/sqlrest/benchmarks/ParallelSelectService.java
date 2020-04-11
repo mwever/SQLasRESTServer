@@ -105,7 +105,8 @@ public class ParallelSelectService {
 //        numberOfJobs = Integer.parseInt(numWorkers) * 2;
         numberOfJobs = Integer.parseInt(numJobs);
         SQLRestServiceHandler.INSTANCE.setAccessLimit(Integer.parseInt(limitedAccessNum));
-        AbstractServiceBenchmark.startService(serviceState, state);
+        SQLBenchmarkUtil.startService(serviceState, state);
+        SQLBenchmarkUtil.flushDB();
     }
 
 //    @Setup
