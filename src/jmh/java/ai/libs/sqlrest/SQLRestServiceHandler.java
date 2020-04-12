@@ -8,6 +8,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.io.*;
 import java.net.Socket;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public enum SQLRestServiceHandler {
 
@@ -33,6 +34,10 @@ public enum SQLRestServiceHandler {
 
     private Properties serverProperties = new Properties();
 
+    {
+        serverProperties.put("server.tomcat.max-threads", "10000");
+    }
+
     SQLRestServiceHandler() {
         this(new File(System.getProperty("user.dir")));
     }
@@ -46,10 +51,13 @@ public enum SQLRestServiceHandler {
         }));
     }
 
-    private void createCommand() {
+    private boolean isWindows() {
         boolean isWindows = System.getProperty("os.name").toLowerCase(Locale.ENGLISH).startsWith("windows");
+        return isWindows;
+    }
 
-        String gradleScript = isWindows ? "gradlew.bat" : "./gradlew";
+    private void createCommand() {
+        String gradleScript =  isWindows()  ? "gradlew.bat" : "./gradlew";
         String taskName = "bootRun";
         String gradleProp = String.format("-P%s=%s", GRADLE_PROP_BOOT_RUN_WD, workingDir.getPath());
 
@@ -186,7 +194,13 @@ public enum SQLRestServiceHandler {
 
     public void startService() {
         if(isPortInUse()) {
-            throw new IllegalStateException("There is already a service running on port 8080.");
+//            throw new IllegalStateException("There is already a service running on port 8080.");
+            logger.warn("There is already a service running on port 8080. Killing it first..");
+            stopService();
+            if(isPortInUse()) {
+                logger.error("There is still a service running on port 8080. Exiting..");
+                System.exit(1);
+            }
         }
         createProcessBuilder();
         writeAppProperties();
@@ -210,7 +224,7 @@ public enum SQLRestServiceHandler {
         int tries = 0;
         int maxTries = 50;
         while(tries < maxTries) {
-            if(!process.isAlive()) {
+            if(process != null && !process.isAlive()) {
                 throw new IllegalStateException("Process is not alive: " + processName());
             }
             WebClient.RequestHeadersUriSpec<?> getRequest = webClient.get();
@@ -252,9 +266,47 @@ public enum SQLRestServiceHandler {
         }
     }
 
+    private void killOtherService() {
+        if(!isPortInUse()) {
+            throw new IllegalStateException("Cannot kill other service because there are none listening to 8080.");
+        }
+        if(isWindows()) {
+            throw new RuntimeException("No implementation for windows kill command present.");
+        }
+        try {
+            Process getPidOtherService = Runtime.getRuntime().exec("lsof -t -i :8080");
+            getPidOtherService.waitFor();
+            if(getPidOtherService.exitValue() != 0) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(getPidOtherService.getErrorStream()));
+                String errLines = reader.lines().collect(Collectors.joining("\n"));
+                throw new RuntimeException("Couldn't get pid of the other service: " + errLines);
+            }
+            BufferedReader reader = new BufferedReader(new InputStreamReader(getPidOtherService.getInputStream()));
+            String otherProcessIDs = reader.lines().collect(Collectors.joining(" "));
+            logger.info("Killing other processes with id: " + otherProcessIDs);
+            Process killOtherService = Runtime.getRuntime().exec("kill " + otherProcessIDs);
+            killOtherService.waitFor();
+            if(killOtherService.exitValue() != 0) {
+                BufferedReader errReader = new BufferedReader(new InputStreamReader(killOtherService.getErrorStream()));
+                String errLines = errReader.lines().collect(Collectors.joining("\n"));
+                BufferedReader outReader = new BufferedReader(new InputStreamReader(killOtherService.getInputStream()));
+                String outLines = outReader.lines().collect(Collectors.joining("\n"));
+                throw new RuntimeException(String.format("Cannot destroy other process listening on port .\nOut: %s\nErr: %s", outLines, errLines));
+            }
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException("Error trying to destroy other process listening on port 8080.", e);
+        }
+    }
+
     public void stopService() {
         if(process == null) {
-            throw new IllegalStateException("Process hasn't started yet. cannot be stopped.");
+//            throw new IllegalStateException("Process hasn't started yet. cannot be stopped.");
+            try {
+                killOtherService();
+            } catch(Exception ex) {
+                logger.error("Couldn't kill other service running on port 8080.", ex);
+                System.exit(1);
+            }
         }
         if(!process.isAlive()) {
             logger.warn("Process {} was already done.", processName());
