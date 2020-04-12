@@ -14,10 +14,10 @@ public class SQLAdapterManager {
 
     private Map<String, TokenConnectionHandle> tokenConnectionHandleMap = new ConcurrentHashMap<>();
 
-    private SQLAdapterProvider provider;
+    private ISLAdapterSupplier provider;
 
     @Autowired
-    public SQLAdapterManager(SQLAdapterProvider provider) {
+    public SQLAdapterManager(ISLAdapterSupplier provider) {
         this.provider = provider;
     }
 

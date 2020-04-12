@@ -54,24 +54,42 @@ public interface IServerConfig extends Mutable {
     @DefaultValue("1")
     public int getNumAdapterInstances();
 
+    /**
+     * Returns number of adapter instances that are created.
+     */
     @Key(K_NUM_ADAPTER_INSTANCES_LIMIT)
     @DefaultValue("16")
-    public int getNumAdapterInstancesLimit();
+    int getNumAdapterInstancesLimit();
 
-    @Key(K_NUM_ADAPTER_ACCESS_LIMIT)
-    @DefaultValue("1")
-    public int getNumAdapterAccessLimit();
-
+    /*
+     * Returns true if requests pick adapters randomly.
+     * Else requests access adapters by round-robin.
+     */
     @Key(K_ADAPTER_ACCESS_RANDOM)
     @DefaultValue("true")
     public boolean isAccessRandom();
 
+    /**
+     * Returns true if access to adapters of a specific token is limited to a `getNumAdapterAccessLimit()` amount.
+     * Remaining requests are blocked.
+     */
     @Key(K_ADAPTER_LIMIT_ACCESS)
     @DefaultValue("false")
     public boolean isAccessLimited();
 
-	default SQLAdapter createAdminAdapter() {
+    /**
+     * Returns number of parallel requests that get accessed to adapters of a specific token if the `isAccessLimited()` is true.
+     */
+    @Key(K_NUM_ADAPTER_ACCESS_LIMIT)
+    @DefaultValue("1")
+    public int getNumAdapterAccessLimit();
 
+    /**
+     * Creates and returns a SQLAdapter based on the admin user and db information defined by this configuration.
+     *
+     * @return SQLAdapter connnected to the admin database.
+     */
+	default SQLAdapter createAdminAdapter() {
 //	    Properties connectionProps = new Properties();
 //        connectionProps.put("verifyServerCertificate", getDBPropUseSsl());
 //        connectionProps.put("requireSSL", getDBPropRequireSsl());

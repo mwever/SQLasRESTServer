@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class TokenConnectionHandle {
+class TokenConnectionHandle {
 
     private static final IServerConfig config = ConfigCache.getOrCreate(IServerConfig.class);
 
@@ -45,7 +45,7 @@ public class TokenConnectionHandle {
         adminAdapter.close();
     }
 
-    public void requireNumConnectionsMatchesConfig(SQLAdapterProvider provider) {
+    public void requireNumConnectionsMatchesConfig(ISLAdapterSupplier provider) {
         int newNumConnections = config.getNumAdapterInstances();
         if(newNumConnections < 1) {
             throw new IllegalArgumentException("Number of connections needs to be positive: " + newNumConnections);
@@ -60,7 +60,7 @@ public class TokenConnectionHandle {
         }
     }
 
-    private void readjustNumConnections(SQLAdapterProvider provider, int newNumConnections) {
+    private void readjustNumConnections(ISLAdapterSupplier supplier, int newNumConnections) {
         synchronized (this) {
             currentAdapters = new ArrayList<IDatabaseAdapter>(currentAdapters);
             // Copy the list because maybe another thread has returned the original list and it is being used in parallel.
@@ -69,7 +69,7 @@ public class TokenConnectionHandle {
                 toBeRemoved.close(); // There is a small probability that the adapter is being used.
             }
             while(newNumConnections > currentAdapters.size()) {
-                IDatabaseAdapter adapter = provider.get(config.getDBHost(), user, passwd, dbName);
+                IDatabaseAdapter adapter = supplier.get(config.getDBHost(), user, passwd, dbName);
                 currentAdapters.add(adapter);
             }
         }

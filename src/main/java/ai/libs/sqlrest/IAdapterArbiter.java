@@ -4,7 +4,7 @@ import ai.libs.jaicore.db.IDatabaseAdapter;
 
 import java.sql.SQLException;
 
-public interface ISQLAdapterAccess {
+public interface IAdapterArbiter {
 
     IDatabaseAdapter acquire(String token) throws SQLException, InterruptedException;
 

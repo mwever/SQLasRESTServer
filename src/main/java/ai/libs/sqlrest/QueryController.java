@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import ai.libs.jaicore.db.sql.SQLAdapter;
 import ai.libs.sqlrest.model.SQLQuery;
 
 @RestController
@@ -24,18 +23,18 @@ public class QueryController {
 
     private final static IServerConfig config = ConfigCache.getOrCreate(IServerConfig.class);
 
-	private ISQLAdapterAccess isqlAdapterAccess;
+	private IAdapterArbiter iAdapterArbiter;
 
-	public QueryController(@Qualifier("getAccessImpl") ISQLAdapterAccess access) {
-	    this.isqlAdapterAccess = access;
+	public QueryController(@Qualifier("getAccessImpl") IAdapterArbiter access) {
+	    this.iAdapterArbiter = access;
     }
 
 	private IDatabaseAdapter getConnector(final String token) throws SQLException, InterruptedException {
-	    return isqlAdapterAccess.acquire(token);
+	    return iAdapterArbiter.acquire(token);
 	}
 
 	private void giveBackConnector(IDatabaseAdapter adapter, final String token) throws SQLException {
-	    isqlAdapterAccess.release(adapter, token);
+	    iAdapterArbiter.release(adapter, token);
     }
 
 	@PostMapping("/query")

@@ -1,16 +1,17 @@
-package ai.libs.sqlrest;
+package ai.libs.sqlrest.arbiter;
 
 import ai.libs.jaicore.db.IDatabaseAdapter;
-import ai.libs.jaicore.db.sql.SQLAdapter;
+import ai.libs.sqlrest.IAdapterArbiter;
+import ai.libs.sqlrest.SQLAdapterManager;
 
 import java.sql.SQLException;
 import java.util.List;
 
-public class ISQLAdapterRandomAccess implements ISQLAdapterAccess {
+public class RandomAdapterArbiter implements IAdapterArbiter {
 
     private final SQLAdapterManager adapterManager;
 
-    public ISQLAdapterRandomAccess(SQLAdapterManager adapterManager) {
+    public RandomAdapterArbiter(SQLAdapterManager adapterManager) {
         this.adapterManager = adapterManager;
     }
 

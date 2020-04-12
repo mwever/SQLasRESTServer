@@ -1,6 +1,8 @@
-package ai.libs.sqlrest;
+package ai.libs.sqlrest.arbiter;
 
 import ai.libs.jaicore.db.IDatabaseAdapter;
+import ai.libs.sqlrest.IAdapterArbiter;
+import ai.libs.sqlrest.SQLAdapterManager;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -8,13 +10,13 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class ISQLAdapterCyclicAccess implements ISQLAdapterAccess {
+public class CyclicAdapterArbiter implements IAdapterArbiter {
 
     private final Map<String, AtomicInteger> tokenSQLAdapterIndexMap = new ConcurrentHashMap<>();
 
     private final SQLAdapterManager adapterManager;
 
-    public ISQLAdapterCyclicAccess(SQLAdapterManager adapterManager) {
+    public CyclicAdapterArbiter(SQLAdapterManager adapterManager) {
         this.adapterManager = adapterManager;
     }
 

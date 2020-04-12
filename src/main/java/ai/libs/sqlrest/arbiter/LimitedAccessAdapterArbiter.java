@@ -1,6 +1,8 @@
-package ai.libs.sqlrest;
+package ai.libs.sqlrest.arbiter;
 
 import ai.libs.jaicore.db.IDatabaseAdapter;
+import ai.libs.sqlrest.IAdapterArbiter;
+import ai.libs.sqlrest.IServerConfig;
 import org.aeonbits.owner.ConfigCache;
 
 import java.sql.SQLException;
@@ -8,16 +10,16 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 
-public class ISQLAdapterLimitedAccess implements ISQLAdapterAccess {
+public class LimitedAccessAdapterArbiter implements IAdapterArbiter {
 
     private final IServerConfig config = ConfigCache.getOrCreate(IServerConfig.class);
 
     private Map<String, Semaphore> tokenPermitsMap;
 
-    private ISQLAdapterAccess adapterAccess;
+    private IAdapterArbiter arbiter;
 
-    public ISQLAdapterLimitedAccess(ISQLAdapterAccess adapterAccess) {
-        this.adapterAccess = adapterAccess;
+    public LimitedAccessAdapterArbiter(IAdapterArbiter arbiter) {
+        this.arbiter = arbiter;
         this.tokenPermitsMap = new ConcurrentHashMap<>();
     }
 
@@ -26,7 +28,7 @@ public class ISQLAdapterLimitedAccess implements ISQLAdapterAccess {
         Semaphore permits = tokenPermitsMap.computeIfAbsent(token,
                 t -> new Semaphore(config.getNumAdapterAccessLimit()));
         permits.acquire();
-        return adapterAccess.acquire(token);
+        return arbiter.acquire(token);
     }
 
     @Override
