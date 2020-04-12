@@ -50,7 +50,7 @@ public class ParallelSelectService {
     private String numServiceAdapters;
 
     @Param({
-            "25", "99"
+            "25", "99", "500"
     })
     private String numWorkers;
 

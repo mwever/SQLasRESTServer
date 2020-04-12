@@ -30,7 +30,7 @@ class BaseConnectionHandler {
          * Close connection if the last access to the connection was 5 minutes ago  or earlier.
          */
         long currentTime = System.currentTimeMillis();
-        if(timestampOfLastAction + connectionTimeout > currentTime) {
+        if(timestampOfLastAction + connectionTimeout < currentTime) {
             closeConnection();
         }
 

@@ -69,7 +69,7 @@ class TokenConnectionHandle {
                 toBeRemoved.close(); // There is a small probability that the adapter is being used.
             }
             while(newNumConnections > currentAdapters.size()) {
-                IDatabaseAdapter adapter = supplier.get(config.getDBHost(), user, passwd, dbName);
+                IDatabaseAdapter adapter = supplier.get(user, passwd, dbName);
                 currentAdapters.add(adapter);
             }
         }
