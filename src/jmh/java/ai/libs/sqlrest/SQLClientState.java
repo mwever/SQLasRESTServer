@@ -22,7 +22,9 @@ import reactor.netty.tcp.TcpClient;
 
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 @State(Scope.Thread)
@@ -36,26 +38,14 @@ public class SQLClientState {
 
     private SQLAdapter adapter;
 
+    private Map<String, String[]> tokenAccessMap = new ConcurrentHashMap<>();
+
     private WebClient webClient;
 
     private void retrieveDatabaseInfo() throws SQLException {
-        SQLAdapter adminAdapter = SERVER_CONFIG.createAdminAdapter();
-        List<IKVStore> res = adminAdapter.getResultsOfQuery("SELECT * " +
-                "FROM experiments " +
-                "WHERE experiment_token='"
-                + Objects.requireNonNull(BENCHMARK_CONFIG.getBenchmarkToken())
-                + "'");
-        if (res.isEmpty()) {
-            throw new IllegalStateException("No experiment known for the given token!");
-        }
-        if (res.size() > 1) {
-            throw new IllegalStateException("Multiple experiments for the same token. A token must be unique!");
-        }
-        IKVStore connectionDescription = res.get(0);
-        userName = connectionDescription.getAsString("db_user");
-        password = connectionDescription.getAsString("db_passwd");
-        dbName = connectionDescription.getAsString("db_name");
-        adminAdapter.close();
+        userName = getUserName(BENCHMARK_CONFIG.getBenchmarkToken());
+        password = getPassword(BENCHMARK_CONFIG.getBenchmarkToken());
+        dbName = getDbName(BENCHMARK_CONFIG.getBenchmarkToken());
     }
 
     private void createAdapter() {
@@ -68,17 +58,16 @@ public class SQLClientState {
     }
 
     private void createWebClient() {
-
         ExchangeStrategies exchangeStrategies = ExchangeStrategies.builder()
                 .codecs(configurer -> configurer.defaultCodecs()
 //                        .maxInMemorySize(500 * (1 << 20))) //
                         .maxInMemorySize(-1)) // -1 : unlimited memory for fetch buffer
                 .build();
-        TcpClient tcpClient = TcpClient.create(ConnectionProvider.create("fixed-pool-", 10000))
-                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)
+        TcpClient tcpClient = TcpClient.create(ConnectionProvider.create("fixed-pool-", 1000))
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 1000)
                 .doOnConnected(connection -> {
-                    connection.addHandlerLast(new ReadTimeoutHandler(1, TimeUnit.HOURS));
-                    connection.addHandlerLast(new WriteTimeoutHandler(1, TimeUnit.HOURS));
+                    connection.addHandlerLast(new ReadTimeoutHandler(1, TimeUnit.MINUTES));
+                    connection.addHandlerLast(new WriteTimeoutHandler(1, TimeUnit.MINUTES));
                 });
 
         webClient = WebClient.builder()
@@ -105,6 +94,46 @@ public class SQLClientState {
 
     public String getDbName() {
         return dbName;
+    }
+
+    public String[] getAccessInfo(final String token) {
+        return tokenAccessMap.computeIfAbsent(token, t -> {
+            String[] access = new String[3];
+            SQLAdapter adminAdapter = SERVER_CONFIG.createAdminAdapter();
+            List<IKVStore> res = null;
+            try {
+                res = adminAdapter.getResultsOfQuery("SELECT * " +
+                        "FROM experiments " +
+                        "WHERE experiment_token='"
+                        + Objects.requireNonNull(token)
+                        + "'");
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+            if (res.isEmpty()) {
+                throw new IllegalStateException("No experiment known for the given token!");
+            }
+            if (res.size() > 1) {
+                throw new IllegalStateException("Multiple experiments for the same token. A token must be unique!");
+            }
+            IKVStore connectionDescription = res.get(0);
+            access[0] = connectionDescription.getAsString("db_user");
+            access[1] = connectionDescription.getAsString("db_passwd");
+            access[2] = connectionDescription.getAsString("db_name");
+            adminAdapter.close();
+            return access;
+        });
+    }
+
+    public String getUserName(String token) {
+        return getAccessInfo(token)[0];
+    }
+    public String getPassword(String token) {
+        return getAccessInfo(token)[1];
+
+    }
+    public String getDbName(String token) {
+        return getAccessInfo(token)[2];
     }
 
     public SQLAdapter getAdapter() {

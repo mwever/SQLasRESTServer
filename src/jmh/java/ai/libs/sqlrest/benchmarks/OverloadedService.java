@@ -49,7 +49,7 @@ public class OverloadedService {
 
     private void createQuery() {
         String tableName = BENCHMARK_CONFIG.getBenchmarkTable();
-        String sqlQuery = BenchmarkQueryRegistry.createQuery(query, tableName);
+        String sqlQuery = BenchmarkQueryRegistry.createSelectQuery(query, tableName);
         queryObj = new SQLQuery(BENCHMARK_CONFIG.getBenchmarkToken(), sqlQuery);
     }
 

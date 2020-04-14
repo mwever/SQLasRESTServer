@@ -41,11 +41,18 @@ public class BenchmarkQueryRegistry {
             "ORDER BY RAND() LIMIT %d";
 
     public static final String SELECT_N =
-                    "SELECT * " +
-                    "FROM %s " +
-                    "LIMIT %d";
+            "SELECT * " +
+            "FROM %s " +
+            "LIMIT %d";
 
-    public static String createQuery(String query, String tableName) {
+    public static final String SELECT_BY_ID =
+            "SELECT * " +
+            "FROM %s " +
+            "WHERE id = %s";
+
+
+
+    public static String createSelectQuery(String query, String tableName) {
         String sqlQuery;
         switch (query) {
             case "1-random-time-null":
@@ -138,5 +145,24 @@ public class BenchmarkQueryRegistry {
                 throw new IllegalStateException("Query not recognized: " + query);
         }
         return sqlQuery;
+    }
+
+    public static String createSelectNRowsQuery(int rows, int tableNr) {
+        if(tableNr < 0 || tableNr > 9) {
+            throw new IllegalArgumentException("Table Nr out of range");
+        }
+        return String.format(SELECT_N, "t" + tableNr, rows);
+    }
+
+    public static String createSelectRowByIdQuery(int id, int tableNr) {
+        if(tableNr < 0 || tableNr > 9) {
+            throw new IllegalArgumentException("Table Nr out of range");
+        }
+        id %= 55000;
+        return String.format(SELECT_BY_ID, "t" + tableNr, String.valueOf(id));
+    }
+
+    public static String createSelectRowByIdQuery(String id, String table) {
+        return String.format(SELECT_BY_ID, table, id);
     }
 }

@@ -16,10 +16,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
 
-public class CustomAdapter implements IDatabaseAdapter {
+public class CustomServiceAdapter implements IDatabaseAdapter {
 
     // A static field to speed up creation of instances.
-    private static Logger logger = LoggerFactory.getLogger(CustomAdapter.class);
+    private static Logger logger = LoggerFactory.getLogger(CustomServiceAdapter.class);
 
     private static final ResultSetToKVStoreSerializer SERIALIZER = new ResultSetToKVStoreSerializer();
 
@@ -32,7 +32,7 @@ public class CustomAdapter implements IDatabaseAdapter {
 
     private final ISQLQueryBuilder queryBuilder = new MySQLQueryBuilder();
 
-    public CustomAdapter(String user, String password, String databaseName) {
+    public CustomServiceAdapter(String user, String password, String databaseName) {
         connect = new BaseConnectionHandler(new DefaultConnectionSupplier(), user, password, databaseName);
     }
 
@@ -396,7 +396,7 @@ public class CustomAdapter implements IDatabaseAdapter {
     @Override
     public List<IKVStore> query(final String sqlStatement) throws SQLException, IOException {
         this.checkConnection();
-        try (PreparedStatement ps = this.connect.getConnection().prepareCall(sqlStatement)) {
+        try (PreparedStatement ps = this.connect.getConnection().prepareStatement(sqlStatement)) {
             boolean success = ps.execute();
             if (success) {
                 return SERIALIZER.serialize(ps.getResultSet());

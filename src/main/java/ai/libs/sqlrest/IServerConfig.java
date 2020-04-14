@@ -28,6 +28,21 @@ public interface IServerConfig extends Mutable {
     public static final String K_ADAPTER_LIMIT_ACCESS = "server.adapter.accessLimited";
 
 
+    public static final String K_DB_PROP_USE_COMPRESSION = "db.prop.useCompression";
+
+    public static final String K_DB_PROP_FETCH_SIZE = "db.prop.defaultFetchSize";
+
+    public static final String K_DB_PROP_USE_SERVER_PREP_STMTS = "db.prop.useServerPrepStmts";
+
+    public static final String K_DB_PROP_CACHE_PREP_STMTS = "db.prop.cachePrepStmts";
+
+    public static final String K_DB_PROP_USE_READ_AHEAD_INPUT = "db.prop.useReadAheadInput";
+
+    public static final String K_DB_PROP_CACHE_SERVER_CONF = "db.prop.cacheServerConf";
+    public static final String K_DB_PROP_CACHE_PREP_STMT_SIZE = "db.prop.cachePrepStmtSize";
+    public static final String K_DB_PROP_CACHE_PREP_STMT_SQL_LIMIT = "db.prop.cachePrepStmtSqlLimit";
+    public static final String K_DB_PROP_USE_UNBUFFERED_INPUT = "db.prop.useUnbufferedInput";
+
     @Key(K_DB_HOST)
     public String getDBHost();
 
@@ -101,4 +116,43 @@ public interface IServerConfig extends Mutable {
         return adminAdapter;
     }
 
+    /*
+     * Performance properties:
+     */
+
+    @Key(K_DB_PROP_USE_COMPRESSION)
+    @DefaultValue("false")
+    boolean getDBPropUseCompression();
+
+    @Key(K_DB_PROP_FETCH_SIZE)
+    @DefaultValue("0")
+    int getDBPropFetchSize();
+
+    @Key(K_DB_PROP_USE_SERVER_PREP_STMTS)
+    @DefaultValue("false")
+    boolean getDBPropUseServerSidePrepStmts();
+
+    @Key(K_DB_PROP_CACHE_PREP_STMTS)
+    @DefaultValue("false")
+    boolean getDBPropCachePrepStmts();
+
+    @Key(K_DB_PROP_USE_READ_AHEAD_INPUT)
+    @DefaultValue("true")
+    boolean getDBPropReadAheadInput();
+
+    @Key(K_DB_PROP_CACHE_SERVER_CONF)
+    @DefaultValue("false")
+    boolean getDBPropCacheServerConf();
+
+    @Key(K_DB_PROP_CACHE_PREP_STMT_SIZE)
+    @DefaultValue("25")
+    int getDBPropCachePrepStmtsSize();
+
+    @Key(K_DB_PROP_CACHE_PREP_STMT_SQL_LIMIT)
+    @DefaultValue("256")
+    int getDBPropCachePrepStmtsSqlLimit();
+
+    @Key(K_DB_PROP_USE_UNBUFFERED_INPUT)
+    @DefaultValue("true")
+    boolean getDPPropUseUnbufferedInput();
 }

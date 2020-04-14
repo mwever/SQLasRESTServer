@@ -49,7 +49,7 @@ public class OverloadedDB  {
 
     private void createQuery() {
         String tableName = BENCHMARK_CONFIG.getBenchmarkTable();
-        String sqlQuery = BenchmarkQueryRegistry.createQuery(query, tableName);
+        String sqlQuery = BenchmarkQueryRegistry.createSelectQuery(query, tableName);
         queryObj = new SQLQuery(BENCHMARK_CONFIG.getBenchmarkToken(), sqlQuery);
     }
 
@@ -57,7 +57,7 @@ public class OverloadedDB  {
         int numberConnections = Integer.parseInt(numConnections);
         openConnections = new ArrayList<>(numberConnections);
         String tableName = BENCHMARK_CONFIG.getBenchmarkTable();
-        String quickQuery = BenchmarkQueryRegistry.createQuery("select-1", tableName);
+        String quickQuery = BenchmarkQueryRegistry.createSelectQuery("select-1", tableName);
         SQLQuery quickSQLQuery = new SQLQuery(BENCHMARK_CONFIG.getBenchmarkToken(), quickQuery);
         for (int i = 0; i < numberConnections; i++) {
             SQLAdapter adapter = new SQLAdapter(SERVER_CONFIG.getDBHost(),

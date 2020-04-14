@@ -7,13 +7,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class SQLBenchmarkUtil {
 
     private static AtomicBoolean WARNED_MISSING_FLUSH_SCRIPT = new AtomicBoolean(false);
+    private static AtomicBoolean WARNED_MISSING_PERF_PROPS = new AtomicBoolean(false);
 
     private final static Logger logger = LoggerFactory.getLogger(SQLBenchmarkUtil.class);
 
@@ -37,11 +41,24 @@ public final class SQLBenchmarkUtil {
             } catch (Exception e) {
                 logger.error("Error executing flush database script: {} ", script.getAbsolutePath(), e);
             }
-        } else if(WARNED_MISSING_FLUSH_SCRIPT.getAndSet(true)) {
+        } else if(!WARNED_MISSING_FLUSH_SCRIPT.getAndSet(true)) {
             logger.warn("Script to flush database is missing. Place it under: {}", script.getAbsolutePath());
         }
     }
 
+    public static Properties getPerformanceProps() {
+        Properties perfProps = new Properties();
+        File perfPropFile = new File("benchmark-workingdir/server.perf.properties");
+        try(FileInputStream fis = new FileInputStream(perfPropFile)) {
+            perfProps.load(fis);
+        } catch (Exception e) {
+            if(!WARNED_MISSING_PERF_PROPS.getAndSet(true)) {
+                logger.warn("No performance properties were found or could be read. Place it under: {}", perfPropFile.getAbsolutePath(), e);
+            }
+            return perfProps;
+        }
+        return perfProps;
+    }
 
 
 }
