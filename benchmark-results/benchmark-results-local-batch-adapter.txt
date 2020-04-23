@@ -1,0 +1,9 @@
+Benchmark                                              (numJobs)  (numWorkers)     (query)  Mode  Cnt   Score    Error  Units
+ParallelSelectAdapter.parallelQueryOverASingleAdapter       2000            25    select-1    ss    3   1.715 ±  1.337   s/op
+ParallelSelectAdapter.parallelQueryOverASingleAdapter       2000            25  select-100    ss    3  33.183 ± 38.748   s/op
+ParallelSelectAdapter.parallelQueryOverASingleAdapter       2000            99    select-1    ss    3   1.398 ±  0.895   s/op
+ParallelSelectAdapter.parallelQueryOverASingleAdapter       2000            99  select-100    ss    3  24.946 ±  5.791   s/op
+ParallelSelectAdapter.parallelQueryOverFreshAdapters        2000            25    select-1    ss    3   8.898 ±  4.156   s/op
+ParallelSelectAdapter.parallelQueryOverFreshAdapters        2000            25  select-100    ss    3  16.353 ± 32.753   s/op
+ParallelSelectAdapter.parallelQueryOverFreshAdapters        2000            99    select-1    ss    3   9.573 ±  0.709   s/op
+ParallelSelectAdapter.parallelQueryOverFreshAdapters        2000            99  select-100    ss    3  16.898 ± 35.901   s/op

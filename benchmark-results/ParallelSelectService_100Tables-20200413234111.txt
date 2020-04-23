@@ -1,0 +1,18 @@
+Benchmark                                                  (limitedAccessNum)  (numJobs)  (numServiceAdapters)  (numWorkers)  (seed)  (usePerfProperties)  Mode  Cnt   Score    Error  Units
+ParallelSelectService_100Tables.parallelQueryOverAdapters                   0       1000                    64           200      61                 true    ss    5   5.567 ±  2.111   s/op
+ParallelSelectService_100Tables.parallelQueryOverAdapters                   0       3000                    64           200      61                 true    ss    5  17.721 ± 11.929   s/op
+ParallelSelectService_100Tables.parallelQueryOverService                    0       1000                    64           200      61                 true    ss    5   2.536 ±  1.094   s/op
+ParallelSelectService_100Tables.parallelQueryOverService                    0       1000                    64           200      61                false    ss    5   2.169 ±  0.201   s/op
+ParallelSelectService_100Tables.parallelQueryOverService                    0       3000                    64           200      61                 true    ss    5   7.457 ±  3.730   s/op
+ParallelSelectService_100Tables.parallelQueryOverService                    0       3000                    64           200      61                false    ss    5   6.187 ±  0.627   s/op
+
+
+db.prop.useCompression = true
+db.prop.defaultFetchSize = 0
+db.prop.useServerPrepStmts = true
+db.prop.cachePrepStmts = true
+db.prop.useReadAheadInput = false
+db.prop.cacheServerConf = true
+db.prop.cachePrepStmtSize = 100
+db.prop.cachePrepStmtSqlLimit = 1024
+db.prop.useUnbufferedInput = true

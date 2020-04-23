@@ -1,17 +1,16 @@
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath("org.springframework.boot:spring-boot-gradle-plugin:2.2.1.RELEASE")
-    }
+plugins {
+    id 'org.springframework.boot' version '2.2.5.RELEASE'
+    id 'io.spring.dependency-management' version '1.0.9.RELEASE'
+    id 'java'
+    id 'eclipse'
+    id "idea"
 }
 
-apply plugin: 'java'
-apply plugin: 'eclipse'
-apply plugin: 'idea'
-apply plugin: 'org.springframework.boot'
-apply plugin: 'io.spring.dependency-management'
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
 
 sourceSets {
     main {
@@ -41,75 +40,58 @@ configurations {
 }
 
 dependencies {
+    def excludeLog4j = {
+        exclude module: 'log4j-to-slf4j'
+        exclude module: 'log4j-api'
+        exclude module: 'slf4j-log4j12'
+        exclude module: 'log4j'
+        exclude module: 'slf4j-log4j12'
+    }
+    def excludeLogback = {
+        exclude module: "spring-boot-starter-logging"
+        exclude module: "logback-classic"
+    }
+
+    /*
+     * Set logging library:
+     */
+    def useLog4j = true // change to `false` to switch to logback
+    def excludeLoggingLibrary
+    if(useLog4j) {
+        excludeLoggingLibrary = excludeLogback
+        compile 'org.springframework.boot:spring-boot-starter-log4j2'
+    } else {
+        excludeLoggingLibrary = excludeLog4j
+    }
+
+    /*
+     * Declare dependencies:
+     */
 	// dependencies for development time
- 	compile ('ai.libs:jaicore-basic:0.2.1') {
- 		exclude module: 'log4j-to-slf4j'
- 		exclude module: 'log4j-api'
- 		exclude module: 'slf4j-log4j12'
- 		exclude module: 'log4j'
- 		exclude module: 'slf4j-log4j12'
- 	}
+ 	compile('ai.libs:jaicore-basic:0.2.1', excludeLoggingLibrary)
  	
- 	compile("mysql:mysql-connector-java:8.0.19") {
- 		exclude module: 'log4j-to-slf4j'
- 		exclude module: 'log4j-api'
- 		exclude module: 'slf4j-log4j12'
- 		exclude module: 'log4j'
- 		exclude module: 'slf4j-log4j12'
- 	}
+ 	compile("mysql:mysql-connector-java:8.0.19", excludeLoggingLibrary)  
  	
- 	compile("commons-codec:commons-codec:1.11") {
- 		exclude module: 'log4j-to-slf4j'
- 		exclude module: 'log4j-api'
- 		exclude module: 'slf4j-log4j12'
- 		exclude module: 'log4j'
- 		exclude module: 'slf4j-log4j12'
- 	}
-	compile("org.springframework.boot:spring-boot-starter-data-jpa") {
- 		exclude module: 'log4j-to-slf4j'
- 		exclude module: 'log4j-api'
- 		exclude module: 'slf4j-log4j12'
- 		exclude module: 'log4j'
- 		exclude module: 'slf4j-log4j12'
- 	}
-    compile("org.springframework.boot:spring-boot-starter-web") {
- 		exclude module: 'log4j-to-slf4j'
- 		exclude module: 'log4j-api'
- 		exclude module: 'slf4j-log4j12'
- 		exclude module: 'log4j'
- 		exclude module: 'slf4j-log4j12'
- 	}
-	compileOnly("org.projectlombok:lombok") {
- 		exclude module: 'log4j-to-slf4j'
- 		exclude module: 'log4j-api'
- 		exclude module: 'slf4j-log4j12'
- 		exclude module: 'log4j'
- 		exclude module: 'slf4j-log4j12'
- 	}
-	annotationProcessor("org.projectlombok:lombok") {
- 		exclude module: 'log4j-to-slf4j'
- 		exclude module: 'log4j-api'
- 		exclude module: 'slf4j-log4j12'
- 		exclude module: 'log4j'
- 		exclude module: 'slf4j-log4j12'
- 	}
+ 	compile("commons-codec:commons-codec:1.11", excludeLoggingLibrary)
+
+	compile("org.springframework.boot:spring-boot-starter-data-jpa", excludeLoggingLibrary) 
+
+    compile("org.springframework.boot:spring-boot-starter-web", excludeLoggingLibrary) 
+
+	compileOnly("org.projectlombok:lombok", excludeLoggingLibrary)
+
+	annotationProcessor("org.projectlombok:lombok", excludeLoggingLibrary)
 	
-	compile("org.apache.httpcomponents:httpclient:4.5.10") {
- 		exclude module: 'log4j-to-slf4j'
- 		exclude module: 'log4j-api'
- 		exclude module: 'slf4j-log4j12'
- 		exclude module: 'log4j'
- 		exclude module: 'slf4j-log4j12'
- 	}
-    
-    runtime("org.springframework.boot:spring-boot-devtools")
+	compile("org.apache.httpcomponents:httpclient:4.5.10", excludeLoggingLibrary)
+
+//    runtime("org.springframework.boot:spring-boot-devtools")
     
     testCompile("junit:junit")
 }
 
 bootJar {
-	baseName = 'sql-rest-server'
-	version = '0.1.0'
+	archiveBaseName.set 'sql-rest-server'
+	archiveVersion.set '0.1.0'
 }
 
 configurations {
@@ -119,10 +101,83 @@ eclipse {
 	project.natures "org.eclipse.buildship.core.gradleprojectnature"
 }
 
-repositories {
-	mavenCentral()
+bootRun {
+    def propertyWorkingDir = project.properties["bootRun.workingDir"]
+    if(propertyWorkingDir != null) {
+        def workingDirFile = new File(propertyWorkingDir.toString())
+        workingDirFile.mkdirs()
+        if(!workingDirFile.isDirectory()) {
+            throw new IllegalArgumentException("Working directory cannot be set to ${propertyWorkingDir}. It isn't a directory.")
+        }
+        workingDir = propertyWorkingDir
+    } else {
+        workingDir = rootDir.getAbsolutePath()
+    }
 }
 
-bootRun {
-    workingDir = rootDir.getAbsolutePath()
+
+/*
+ * Add JMH configuration for micro benchmarking:
+ * For more information see: https://openjdk.java.net/projects/code-tools/jmh/
+ */
+
+sourceSets {
+    jmh {
+        java.srcDirs = ['src/jmh/java']
+        resources.srcDirs = ['src/jmh/resources']
+        compileClasspath += sourceSets.main.runtimeClasspath
+    }
 }
+task prepareJMHOutputDir {
+    doLast {
+        def outDir = new File("${project.projectDir}/out")
+        if (!outDir.isDirectory()) {
+            if (outDir.isFile()) {
+                throw new RuntimeException("Expected directory: " + outDir.absolutePath)
+            }
+            def created = outDir.mkdir()
+            if (!created) {
+                throw new RuntimeException("Coulnd't create output directory: " + outDir.absolutePath)
+            }
+            if (!outDir.canWrite()) {
+                throw new RuntimeException("Cannot write to: " + outDir.absolutePath)
+            }
+        }
+    }
+}
+
+task jmh(type: JavaExec, dependsOn: [jmhClasses, prepareJMHOutputDir]) {
+    main = 'org.openjdk.jmh.Main'
+    classpath = sourceSets.jmh.runtimeClasspath + sourceSets.jmh.compileClasspath
+
+    def currentTimeStr = java.time.format.DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
+            .format(java.time.LocalDateTime.now())
+    def commandArgs
+    def benchmarkClass = project.properties["benchmark.Class"] // read target benchmark from properties
+    if(benchmarkClass != null) {
+        commandArgs = [
+                benchmarkClass, // benchmark class
+                '-rf', 'text', // result format
+                '-rff', "out/${benchmarkClass}-${currentTimeStr}.txt", // result file
+                '-prof', 'stack', '-prof', 'gc']
+    } else {
+        // benchmark all `@Benchmark` classes
+        commandArgs = [
+                '-rf', 'text', // result format
+                '-rff', "out/benchmark-results-${currentTimeStr}.txt", // result file
+                '-prof', 'stack', '-prof', 'gc']
+    }
+    args commandArgs
+    jvmArgs '-ea'
+}
+
+dependencies {
+    jmhImplementation('org.springframework.boot:spring-boot-starter-webflux'){
+        exclude module: "spring-boot-starter-logging"
+        exclude module: "logback-classic"
+    }
+    jmhImplementation 'org.openjdk.jmh:jmh-core:1.21'
+    jmhImplementation 'org.apache.httpcomponents:httpclient:4.5.10'
+    jmhAnnotationProcessor 'org.openjdk.jmh:jmh-generator-annprocess:1.21'
+}
+classes.finalizedBy(jmhClasses)

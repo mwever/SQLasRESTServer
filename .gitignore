@@ -29,3 +29,8 @@ hs_err_pid*
 /.project
 /.classpath
 /build/
+/out/
+**/generated
+benchmark-workingdir
+
+my.setup.txt

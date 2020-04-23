@@ -29,6 +29,26 @@ db.backend.name = database_name # <2>
 db.backend.user = user_name # <3>
 db.backend.passwd = password_123 # <4>
 server.adapter.instances = 1 # <5>
+
+db.prop.useSSL = true
+
+# Should access to the adapters be limited to `accessLimit` amount.
+server.adapter.accessLimited=false
+# How many threads can access adapters of a single database at once.
+server.adapter.accessLimit=100
+# Should the access to the adapters be by random, or by round robin.
+server.adapter.randomAccess=true
+
+# Performance options used in database connections and their default value:
+#db.prop.useCompression = false
+#db.prop.defaultFetchSize = 0
+#db.prop.useServerPrepStmts = false
+#db.prop.cachePrepStmts = false
+#db.prop.cachePrepStmtSize = 25
+#db.prop.cachePrepStmtSqlLimit = 128
+#db.prop.useReadAheadInput = false
+#db.prop.cacheServerConf = false
+#db.prop.useUnbufferedInput = true
 ----
 <1> The host of the (remote) database server.
 <2> The name of the database to connect to.
