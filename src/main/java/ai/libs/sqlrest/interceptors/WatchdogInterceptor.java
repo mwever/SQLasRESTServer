@@ -149,7 +149,7 @@ public class WatchdogInterceptor implements IQueryInterceptor, Runnable {
     }
 
     private void watchLoop() throws InterruptedException {
-        while(queryTimers.peekFirst() == null) {
+        if(queryTimers.peekFirst() == null) {
             // nothing is in queue. Write some updates:
             writeUpdates();
         }
