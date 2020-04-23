@@ -39,6 +39,14 @@ server.adapter.accessLimit=100
 # Should the access to the adapters be by random, or by round robin.
 server.adapter.randomAccess=true
 
+# Query Logging
+
+server.logging.logSlowQueries = true <6>
+server.logging.slowQueryThreshold = 3000 <7>
+server.logging.dynamicSlowQueryThreshold = true <8>
+server.logging.dynamicSlowQueryThresholdMinLimit = 500 <9>
+server.logging.slowestQueriesQuantile = 0.995 <10>
+
 # Performance options used in database connections and their default value:
 #db.prop.useCompression = false
 #db.prop.defaultFetchSize = 0
@@ -55,6 +63,11 @@ server.adapter.randomAccess=true
 <3> The username used for authentication.
 <4> The password used for authentication.
 <5> Number of connections to the database. A higher amount causes more overhead contention but allows for parallel access.
+<6> Slow queries will be logged into the admin database. The `Querylogs` table has to be present.
+<7> Queries slower than this threshold (milli seconds) will be logged.
+<8> If true the threshold will be dynamically lowered in order to capture the slowest quantile of requests.
+<9> The dynamic threshold will not be lower than this amount.
+<10> The quantile of queries that are logged if dynamic threshold is enabled.
 
 
 === Startup
@@ -84,4 +97,13 @@ This starts a container with named `sqlrest`.
 +
 ----
 >> bash stop.sh
+----
+
+=== Logging table
+
+If logging needs to be enabled create a table in the admin database called Querylogs:
+
+[source]
+----
+include::src/main/resources/create_logging_table.sql[]
 ----

@@ -4,8 +4,6 @@ import ai.libs.jaicore.db.sql.SQLAdapter;
 import org.aeonbits.owner.Config.Sources;
 import org.aeonbits.owner.Mutable;
 
-import java.util.Properties;
-
 @Sources({ "file:conf/server.properties" })
 public interface IServerConfig extends Mutable {
 
@@ -27,6 +25,11 @@ public interface IServerConfig extends Mutable {
     public static final String K_ADAPTER_ACCESS_RANDOM = "server.adapter.randomAccess";
     public static final String K_ADAPTER_LIMIT_ACCESS = "server.adapter.accessLimited";
 
+    public static final String K_SERVER_LOGGING_LOG_SLOW_QUERIES = "server.logging.logSlowQueries";
+    public static final String K_SERVER_LOGGING_SLOW_QUERY_THRESHOLD = "server.logging.slowQueryThreshold";
+    public static final String K_SERVER_LOGGING_DYNAMIC_SLOW_QUERY_THRESHOLD = "server.logging.dynamicSlowQueryThreshold";
+    public static final String K_SERVER_LOGGING_DYNAMIC_SLOW_QUERY_THRESHOLD_MIN_LIMIT = "server.logging.dynamicSlowQueryThresholdMinLimit";
+    public static final String K_SERVER_LOGGING_SLOWEST_QUERIES_QUANTILE = "server.logging.slowestQueriesQuantile";
 
     public static final String K_DB_PROP_USE_COMPRESSION = "db.prop.useCompression";
 
@@ -42,6 +45,7 @@ public interface IServerConfig extends Mutable {
     public static final String K_DB_PROP_CACHE_PREP_STMT_SIZE = "db.prop.cachePrepStmtSize";
     public static final String K_DB_PROP_CACHE_PREP_STMT_SQL_LIMIT = "db.prop.cachePrepStmtSqlLimit";
     public static final String K_DB_PROP_USE_UNBUFFERED_INPUT = "db.prop.useUnbufferedInput";
+
 
     @Key(K_DB_HOST)
     public String getDBHost();
@@ -98,6 +102,27 @@ public interface IServerConfig extends Mutable {
     @Key(K_NUM_ADAPTER_ACCESS_LIMIT)
     @DefaultValue("1")
     public int getNumAdapterAccessLimit();
+
+
+    @Key(K_SERVER_LOGGING_LOG_SLOW_QUERIES)
+    @DefaultValue("true")
+    public boolean isLogSlowQueriesEnabled();
+
+    @Key(K_SERVER_LOGGING_SLOW_QUERY_THRESHOLD)
+    @DefaultValue("3000")
+    public long slowQueryThreshold();
+
+    @Key(K_SERVER_LOGGING_DYNAMIC_SLOW_QUERY_THRESHOLD)
+    @DefaultValue("true")
+    public boolean isQueryThresholdDynamic();
+
+    @Key(K_SERVER_LOGGING_SLOWEST_QUERIES_QUANTILE)
+    @DefaultValue("0.995")
+    public double slowestQueriesQuantile();
+
+    @Key(K_SERVER_LOGGING_DYNAMIC_SLOW_QUERY_THRESHOLD_MIN_LIMIT)
+    @DefaultValue("500")
+    public long slowQueryDynamicMinLimit();
 
     /**
      * Creates and returns a SQLAdapter based on the admin user and db information defined by this configuration.

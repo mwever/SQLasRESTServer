@@ -23,18 +23,14 @@ public class QueryController {
 
     private final static IServerConfig config = ConfigCache.getOrCreate(IServerConfig.class);
 
-	private IAdapterArbiter iAdapterArbiter;
+	private IQueryInterceptor iQueryInterceptor;
 
-	public QueryController(@Qualifier("getAccessImpl") IAdapterArbiter access) {
-	    this.iAdapterArbiter = access;
+	public QueryController(@Qualifier("interceptorConf") IQueryInterceptor access) {
+	    this.iQueryInterceptor = access;
     }
 
-	private IDatabaseAdapter getConnector(final String token) throws SQLException, InterruptedException {
-	    return iAdapterArbiter.acquire(token);
-	}
-
-	private void giveBackConnector(IDatabaseAdapter adapter, final String token) throws SQLException {
-	    iAdapterArbiter.release(adapter, token);
+	private ClosableQuery getConnector(final SQLQuery query) throws SQLException, InterruptedException {
+	    return iQueryInterceptor.requestConnection(query);
     }
 
 	@PostMapping("/query")
@@ -44,14 +40,9 @@ public class QueryController {
 		} catch (Exception e) {
 			throw new IllegalArgumentException("Query is not allowed", e);
 		}
-        IDatabaseAdapter connector = null;
-        String token = query.getToken();
-        try {
-            connector = this.getConnector(token);
-            return connector.query(query.getQuery());
-        } finally {
-            if (connector != null)
-		        giveBackConnector(connector, token);
+        try (ClosableQuery connection = this.getConnector(query)) {
+            IDatabaseAdapter connector = connection.getAdapter();
+            return connection.getAdapter().query(query.getQuery());
         }
 	}
 
@@ -62,14 +53,9 @@ public class QueryController {
 		} catch (Exception e) {
 			throw new IllegalArgumentException("Query is not allowed", e);
 		}
-        IDatabaseAdapter connector = null;
-        String token = query.getToken();
-        try {
-            connector = this.getConnector(token);
+        try (ClosableQuery connection = this.getConnector(query)) {
+            IDatabaseAdapter connector = connection.getAdapter();
             return connector.update(query.getQuery());
-        } finally {
-            if (connector != null)
-                giveBackConnector(connector, token);
         }
 	}
 
@@ -80,14 +66,9 @@ public class QueryController {
 		} catch (Exception e) {
 			throw new IllegalArgumentException("Query is not allowed", e);
 		}
-        IDatabaseAdapter connector = null;
-        String token = query.getToken();
-        try {
-            connector = this.getConnector(token);
+        try (ClosableQuery connection = this.getConnector(query)) {
+            IDatabaseAdapter connector = connection.getAdapter();
             return connector.insert(query.getQuery(), Collections.emptyList());
-        } finally {
-            if (connector != null)
-                giveBackConnector(connector, token);
         }
 	}
 
