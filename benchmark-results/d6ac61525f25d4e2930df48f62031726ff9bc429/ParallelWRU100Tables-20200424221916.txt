@@ -1,0 +1,4 @@
+Benchmark                                      (limitedAccessNum)  (numJobs)  (numServiceAdapters)  (numWorkers)  (seed)  (usePerfProperties)  Mode  Cnt  Score   Error  Units
+ParallelWRU100Tables.parallelQueryOverAdapter                   0       1000                    64           200      61                 true    ss    5  1.817 ± 0.193   s/op
+ParallelWRU100Tables.parallelQueryOverService                   0       1000                    64           200      61                 true    ss    5  1.154 ± 0.092   s/op
+ParallelWRU100Tables.parallelQueryOverService                   0       1000                    64           200      61                false    ss    5  1.154 ± 0.141   s/op

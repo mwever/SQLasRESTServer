@@ -1,0 +1,13 @@
+Benchmark                                       (limitedAccessNum)  (numJobs)  (numServiceAdapters)  (numWorkers)   (query)  Mode  Cnt  Score   Error  Units
+ParallelSelectService.parallelQueryOverService                   0       2000                     1            25  select-1    ss    3  3.795 ± 0.174   s/op
+ParallelSelectService.parallelQueryOverService                   0       2000                     1            99  select-1    ss    3  3.523 ± 5.992   s/op
+ParallelSelectService.parallelQueryOverService                   0       2000                    16            25  select-1    ss    3  1.814 ± 2.351   s/op
+ParallelSelectService.parallelQueryOverService                   0       2000                    16            99  select-1    ss    3  1.532 ± 0.637   s/op
+ParallelSelectService.parallelQueryOverService                  16       2000                     1            25  select-1    ss    3  3.322 ± 3.509   s/op
+ParallelSelectService.parallelQueryOverService                  16       2000                     1            99  select-1    ss    3  2.820 ± 0.948   s/op
+ParallelSelectService.parallelQueryOverService                  16       2000                    16            25  select-1    ss    3  1.464 ± 0.712   s/op
+ParallelSelectService.parallelQueryOverService                  16       2000                    16            99  select-1    ss    3  1.440 ± 0.337   s/op
+ParallelSelectService.parallelQueryOverService                  64       2000                     1            25  select-1    ss    3  2.842 ± 6.306   s/op
+ParallelSelectService.parallelQueryOverService                  64       2000                     1            99  select-1    ss    3  2.925 ± 3.382   s/op
+ParallelSelectService.parallelQueryOverService                  64       2000                    16            25  select-1    ss    3  1.471 ± 1.528   s/op
+ParallelSelectService.parallelQueryOverService                  64       2000                    16            99  select-1    ss    3  1.679 ± 3.830   s/op

@@ -1,0 +1,19 @@
+Benchmark                                          (query)  Mode  Cnt     Score     Error  Units
+IterativeSelect.singleQueryOverFreshAdapters      1-random    ss   10  2081.773 ± 285.605  ms/op
+IterativeSelect.singleQueryOverFreshAdapters    100-random    ss   10  1929.117 ± 196.367  ms/op
+IterativeSelect.singleQueryOverFreshAdapters   1000-random    ss   10  2033.201 ± 274.794  ms/op
+IterativeSelect.singleQueryOverFreshAdapters      select-1    ss   10    25.294 ±   3.597  ms/op
+IterativeSelect.singleQueryOverFreshAdapters    select-100    ss   10    48.147 ±  17.099  ms/op
+IterativeSelect.singleQueryOverFreshAdapters  select-10000    ss   10   774.412 ±  94.774  ms/op
+IterativeSelect.singleQueryOverService            1-random    ss   10  1943.658 ± 104.649  ms/op
+IterativeSelect.singleQueryOverService          100-random    ss   10  2005.914 ± 207.273  ms/op
+IterativeSelect.singleQueryOverService         1000-random    ss   10  2024.422 ± 106.648  ms/op
+IterativeSelect.singleQueryOverService            select-1    ss   10     9.403 ±   4.050  ms/op
+IterativeSelect.singleQueryOverService          select-100    ss   10    30.928 ±   3.495  ms/op
+IterativeSelect.singleQueryOverService        select-10000    ss   10  1674.308 ±  73.801  ms/op
+IterativeSelect.singleQueryOverSingleAdapter      1-random    ss   10  1925.031 ± 103.929  ms/op
+IterativeSelect.singleQueryOverSingleAdapter    100-random    ss   10  1805.372 ±  29.386  ms/op
+IterativeSelect.singleQueryOverSingleAdapter   1000-random    ss   10  1899.364 ±  40.280  ms/op
+IterativeSelect.singleQueryOverSingleAdapter      select-1    ss   10     2.064 ±   0.342  ms/op
+IterativeSelect.singleQueryOverSingleAdapter    select-100    ss   10    17.635 ±   2.808  ms/op
+IterativeSelect.singleQueryOverSingleAdapter  select-10000    ss   10   724.806 ±  77.376  ms/op

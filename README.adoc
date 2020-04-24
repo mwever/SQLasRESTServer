@@ -105,5 +105,51 @@ If logging needs to be enabled create a table in the admin database called Query
 
 [source]
 ----
-include::src/main/resources/create_logging_table.sql[]
+DROP TABLE IF EXISTS `Querylogs`;
+
+CREATE TABLE `Querylogs` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `session_id` BIGINT NOT NULL,
+    `log_reason` text NOT NULL,
+    `token` text NOT NULL,
+    `sql_query` text NOT NULL,
+    `query_start_time` timestamp NOT NULL,
+    `query_execution_time` BIGINT,
+    `query_threshold` BIGINT,
+    `num_current_db_connections` int NOT NULL,
+    `num_current_db_token_connections` int NOT NULL,
+    `num_requests_since_query` int,
+    `num_unfinished_requests_since_query` int,
+    `num_jvm_threads` int NOT NULL,
+    `used_jvm_memory` BIGINT NOT NULL,
+    `free_jvm_memory` BIGINT NOT NULL,
+    PRIMARY KEY (`id`)
+);
 ----
+
+=== Query runtime
+
+The service records how much it takes to execute queries.
+After the service has served some requests, `/runtime` will return information about average query runtime.
+
+For example, `localhost:8080/runtime` might respond with:
+[source]
+----
+{
+    "0.005": 2.0,
+    "0.01": 3.0, <1>
+    "0.1": 28.982330377916117,
+    "0.25": 64.98681926316468,
+    "0.5": 124.2131860315074, <2>
+    "0.75": 178.8774166718975,
+    "0.9": 219.68377758164164,
+    "0.99": 554.1196257142961, <3>
+    "0.995": 1153.10451593136,
+    "samples": 29181 <4>
+
+}
+----
+<1> The fastest one percent of queries take at most 3 milli seconds.
+<2> An average query takes 124 milli second.
+<3> The slowest one percent of queries take at least 554 milli second.
+<4> The amount of queries served by the

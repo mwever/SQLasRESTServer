@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Component
@@ -40,11 +41,12 @@ public class QueryRuntimeModel {
         return timeDigest.quantile(quantile);
     }
 
-    public synchronized Map<Double, Double> getQueryTimes() {
-        Map<Double, Double> queryTimes = new HashMap<>();
+    public synchronized Map<String, Double> getQueryTimes() {
+        Map<String, Double> queryTimes = new TreeMap<>();
         for (double stdQuantile : STD_QUANTILES) {
-            queryTimes.put(stdQuantile, timeDigest.quantile(stdQuantile));
+            queryTimes.put(String.valueOf(stdQuantile), timeDigest.quantile(stdQuantile));
         }
+        queryTimes.put("samples", (double) getSampleCount());
         return queryTimes;
     }
 
