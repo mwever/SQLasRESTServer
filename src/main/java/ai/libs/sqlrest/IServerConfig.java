@@ -109,7 +109,7 @@ public interface IServerConfig extends Mutable {
     public boolean isLogSlowQueriesEnabled();
 
     @Key(K_SERVER_LOGGING_SLOW_QUERY_THRESHOLD)
-    @DefaultValue("3000")
+    @DefaultValue("2500")
     public long slowQueryThreshold();
 
     @Key(K_SERVER_LOGGING_DYNAMIC_SLOW_QUERY_THRESHOLD)

@@ -1,9 +1,6 @@
 package ai.libs.sqlrest;
 
-import ai.libs.sqlrest.interceptors.CyclicConnectionArbiter;
-import ai.libs.sqlrest.interceptors.LimitedAccessConnectionInterceptor;
-import ai.libs.sqlrest.interceptors.RandomConnectionArbiter;
-import ai.libs.sqlrest.interceptors.WatchdogInterceptor;
+import ai.libs.sqlrest.interceptors.*;
 import ai.libs.sqlrest.supplier.CustomAdapterSupplier;
 import org.aeonbits.owner.ConfigCache;
 import org.slf4j.Logger;
@@ -18,7 +15,7 @@ public class SQLServerConfiguration {
     private final static Logger logger = LoggerFactory.getLogger(SQLServerConfiguration.class);
 
     @Bean
-    IQueryInterceptor interceptorConf(ApplicationContext context, SQLAdapterManager adapterManager) {
+    IQueryInterceptor interceptorConf(ApplicationContext context, SQLAdapterManager adapterManager, QueryRuntimeModel runtimeModel) {
         IServerConfig conf = ConfigCache.getOrCreate(IServerConfig.class);
         IQueryInterceptor impl;
         if(conf.isAccessRandom()) {
@@ -31,13 +28,13 @@ public class SQLServerConfiguration {
         }
         if(conf.isAccessLimited()) {
             logger.info("SQLAccess is limited to {}", conf.getNumAdapterAccessLimit());
-            IQueryInterceptor limitedAccess = new LimitedAccessConnectionInterceptor(impl);
-            impl = limitedAccess;
+            impl = new LimitedAccessConnectionInterceptor(impl);
         }
+        impl = new QueryTimeRecorder(impl, runtimeModel);
         if(conf.isLogSlowQueriesEnabled()) {
             logger.info("Added watchdog interceptor with threshold: {}", conf.slowQueryThreshold());
             DBQueryLogger logger = context.getBean(DBQueryLogger.class);
-            WatchdogInterceptor watchDog = new WatchdogInterceptor(impl, logger);
+            WatchdogInterceptor watchDog = new WatchdogInterceptor(impl, logger, runtimeModel);
             watchDog.startWatchdog();
             impl = watchDog;
         }

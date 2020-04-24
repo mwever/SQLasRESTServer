@@ -84,7 +84,7 @@ public class IterativeSelect  {
         bh.consume(end);
     }
 
-//    @Benchmark
+    @Benchmark
     public void singleQueryOverSingleAdapter(SQLClientState state, Blackhole bh) throws SQLException {
         List<IKVStore> end = state.getAdapter().getResultsOfQuery(queryObj.getQuery());
         assert end != null;
@@ -92,7 +92,7 @@ public class IterativeSelect  {
     }
 
 
-//    @Benchmark
+    @Benchmark
     public void singleQueryOverFreshAdapters(SQLClientState state, Blackhole bh) throws SQLException {
         SQLAdapter freshAdapter = new SQLAdapter(SERVER_CONFIG.getDBHost(),
                 state.getUserName(), state.getPassword(), state.getDbName(), SERVER_CONFIG.getDBPropUseSsl());

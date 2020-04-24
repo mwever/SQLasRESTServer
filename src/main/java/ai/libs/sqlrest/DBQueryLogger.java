@@ -26,11 +26,6 @@ public class DBQueryLogger {
 
     private final static Logger logger = LoggerFactory.getLogger(DBQueryLogger.class);
 
-//    private static final String SESSION_ID; static {
-//        UUID uuid = UUID.randomUUID();
-//        SESSION_ID = Long.toHexString(uuid.getLeastSignificantBits()) + Long.toHexString(uuid.getMostSignificantBits());
-//    }
-
     private static final long SESSION_ID = System.currentTimeMillis();
 
     public static final String LOG_REASON_TIMEOUT = "QUERY_TIMED_OUT";
@@ -105,8 +100,8 @@ public class DBQueryLogger {
 
 
     public int logTimeOut(SQLQuery query,
-                           long timeStarted, long queryThreshold,
-                           int numRequestsSinceQuery, int numUnfinishedRequestsSinceQuery) throws Exception {
+                          long timeStarted, long queryThreshold, String execTime,
+                          int numRequestsSinceQuery, int numUnfinishedRequestsSinceQuery) throws Exception {
         SQLAdapter adapter = getAdapter();
         String insertionString = getInsertionString();
         int numConnections = manager.getNumConnections();
@@ -119,7 +114,7 @@ public class DBQueryLogger {
         String[] values = {
             String.valueOf(SESSION_ID), LOG_REASON_TIMEOUT,
             query.getToken(), query.getQuery(),
-            timeStartedStr, null, String.valueOf(queryThreshold),
+            timeStartedStr, execTime, String.valueOf(queryThreshold),
             String.valueOf(numConnections), String.valueOf(numConnectionsToken),
             String.valueOf(numRequestsSinceQuery), String.valueOf(numUnfinishedRequestsSinceQuery),
             String.valueOf(numJVMThreads), String.valueOf(usedJVMMemory), String.valueOf(freeJVMMemory)

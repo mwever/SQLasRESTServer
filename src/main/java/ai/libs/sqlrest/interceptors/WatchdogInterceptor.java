@@ -1,26 +1,15 @@
 package ai.libs.sqlrest.interceptors;
 
-import ai.libs.sqlrest.ClosableQuery;
-import ai.libs.sqlrest.DBQueryLogger;
-import ai.libs.sqlrest.IQueryInterceptor;
-import ai.libs.sqlrest.IServerConfig;
+import ai.libs.sqlrest.*;
 import ai.libs.sqlrest.model.SQLQuery;
-import com.tdunning.math.stats.TDigest;
 import org.aeonbits.owner.ConfigCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.text.html.Option;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class WatchdogInterceptor implements IQueryInterceptor, Runnable {
 
@@ -28,49 +17,37 @@ public class WatchdogInterceptor implements IQueryInterceptor, Runnable {
 
     private final static IServerConfig CONFIG = ConfigCache.getOrCreate(IServerConfig.class);
 
+
+    // dependencies
     private final IQueryInterceptor prevInterceptor;
 
     private final DBQueryLogger dbQueryLogger;
 
+    private final QueryRuntimeModel queryRuntimeModel;
+
+    // internal fields
     private Thread watchDogThread;
 
     private final BlockingDeque<QueryTimer> queryTimers = new LinkedBlockingDeque<>();
 
-    private final List<QueryTimer> toBeUpdated = new ArrayList<>();
-
     private final AtomicBoolean isActive = new AtomicBoolean(false);
 
-    private final Supplier<Optional<Long>> dynThSupplier;
-    private final Consumer<Long> runtimeDigest;
+    private final AtomicLong localTimeSamplesCountCache = new AtomicLong(0);
 
-    public WatchdogInterceptor(IQueryInterceptor prevInterceptor, DBQueryLogger dbLogger) {
+    private final AtomicLong dynamicThresholdCache = new AtomicLong(0);
+
+    private final double slowestQuantile = CONFIG.slowestQueriesQuantile();
+
+    private final long slowestStaticThreshold = CONFIG.slowQueryThreshold() <= 0 ? 1 : CONFIG.slowQueryThreshold();
+
+    private final long dynamicThresholdLimit = CONFIG.slowQueryDynamicMinLimit() <= 0 ? 1 : CONFIG.slowQueryDynamicMinLimit();
+
+    private final boolean dynamicThreshold = CONFIG.isQueryThresholdDynamic();
+
+    public WatchdogInterceptor(IQueryInterceptor prevInterceptor, DBQueryLogger dbLogger, QueryRuntimeModel queryRuntimeModel) {
         this.prevInterceptor = prevInterceptor;
         this.dbQueryLogger = dbLogger;
-        if(CONFIG.isQueryThresholdDynamic()) {
-            final TDigest tDigest = TDigest.createDigest(500);
-            final AtomicInteger sampleSize = new AtomicInteger(0);
-            final double quantile = CONFIG.slowestQueriesQuantile();
-            final long minDynTh = CONFIG.slowQueryDynamicMinLimit();
-            dynThSupplier = () -> {
-                int i = sampleSize.incrementAndGet();
-                if(i > 500) {
-                    double dynThreshold = tDigest.quantile(quantile);
-                    if(dynThreshold < minDynTh) {
-                        return Optional.of(minDynTh);
-                    } else {
-                        return Optional.of(minDynTh);
-                    }
-                }
-                return Optional.empty();
-            };
-            runtimeDigest = x -> {
-                sampleSize.incrementAndGet();
-                tDigest.add(x);
-            };
-        } else {
-            runtimeDigest = l -> {};
-            dynThSupplier = Optional::empty;
-        }
+        this.queryRuntimeModel = queryRuntimeModel;
     }
 
     public synchronized void startWatchdog() {
@@ -112,25 +89,32 @@ public class WatchdogInterceptor implements IQueryInterceptor, Runnable {
     }
 
     private long getThreshold() {
-        long t = CONFIG.slowQueryThreshold();
-        if(t < 0) {
-            logger.warn("Threshold is negative: {}. Defaulting to 0", t);
-            t = 0;
+        if(!dynamicThreshold) {
+            return slowestStaticThreshold;
         }
-        Optional<Long> dynThOpt = dynThSupplier.get();
-        if(dynThOpt.isPresent()) {
-            long dynTh = dynThOpt.get();
-            if(dynTh < t && dynTh > 0) {
-                t = dynTh;
+        long sampleCount = queryRuntimeModel.getSampleCount();
+        if(sampleCount < 50) {
+            return slowestStaticThreshold; // not enough samples to create a lower threshold.
+        }
+        long localSampleCount = localTimeSamplesCountCache.get();
+        if(localSampleCount + 100 < sampleCount) {
+            boolean controllerThread = localTimeSamplesCountCache.compareAndSet(localSampleCount, sampleCount);
+            if(controllerThread) {
+                synchronized (this) {
+                    dynamicThresholdCache.set((long) queryRuntimeModel.getQueryTime(slowestQuantile));
+                }
             }
         }
-        return t;
+        long dynThreshold = dynamicThresholdCache.get();
+        if(dynThreshold < dynamicThresholdLimit) {
+            dynThreshold = dynamicThresholdLimit;
+        }
+        return Math.min(dynThreshold, slowestStaticThreshold);
     }
 
     private QueryTimer createTimeout(SQLQuery query) {
         QueryTimer queryTimer = new QueryTimer(query, getThreshold());
         queryTimers.addLast(queryTimer);
-        queryTimer.setFinishHook(runtimeDigest);
         logger.trace("Created a timer for the query `{}`, timer: {}", query, queryTimer);
         return queryTimer;
     }
@@ -149,14 +133,9 @@ public class WatchdogInterceptor implements IQueryInterceptor, Runnable {
     }
 
     private void watchLoop() throws InterruptedException {
-        if(queryTimers.peekFirst() == null) {
-            // nothing is in queue. Write some updates:
-            writeUpdates();
-        }
         QueryTimer queryTimer = queryTimers.takeFirst();
         synchronized (queryTimer) {
             while (!queryTimer.isFinished() && !queryTimer.isTimedOut()) {
-                writeUpdates(); // instead of waiting write some updates
                 long remainingTime = queryTimer.getRemainingMillis();
                 if(remainingTime <= 0) {
                     continue;
@@ -168,43 +147,164 @@ public class WatchdogInterceptor implements IQueryInterceptor, Runnable {
             logger.trace("Query {} finished before timeout. Remaining milli seconds: {}", queryTimer.getQuery(), queryTimer.getRemainingMillis());
         }
         if(queryTimer.isTimedOut()) {
-            int requestCount = queryTimers.size();
-            int unfinishedCount = (int) queryTimers.stream().filter(t -> !t.isFinished()).count();
-            logTimeout(queryTimer, requestCount, unfinishedCount);
+            if(!queryTimer.isLogged()) {
+                int requestCount = queryTimers.size();
+                int unfinishedCount = (int) queryTimers.stream().filter(t -> !t.isFinished()).count();
+                logTimeout(queryTimer, requestCount, unfinishedCount);
+            } else if(!queryTimer.isExecTimeLogged()) {
+                logFinishedUpdate(queryTimer);
+            } else if(logger.isTraceEnabled()) {
+                logger.trace("Query {} has been logged with exec time but found in the working queue..", queryTimer);
+            }
         }
     }
 
-    private void writeUpdates() {
-        Iterator<QueryTimer> iterator = toBeUpdated.iterator();
-        QueryTimer update = null;
-        while(iterator.hasNext()) {
-            QueryTimer next;
-            next = iterator.next();
-            if(next.isFinished()) {
-                iterator.remove();
-                update = next;
-                break;
-            }
-        }
-        if(update != null) {
-            try {
-                dbQueryLogger.updateFinished(update.getId(), update.getFinishedTime() - update.getTimeStarted());
-                logger.trace("Updated execution time of {}.", update);
-            } catch (Exception e) {
-                logger.error("Couldn't update exec time of {}.", update, e);
-            }
+    private void logFinishedUpdate(QueryTimer timer) {
+        try {
+            dbQueryLogger.updateFinished(timer.getId(), timer.getFinishedTime() - timer.getTimeStarted());
+            timer.setExecTimeLogged();
+            logger.trace("Updated execution time of {}.", timer);
+        } catch (Exception e) {
+            logger.error("Couldn't update exec time of {}.", timer, e);
         }
     }
 
     private void logTimeout(QueryTimer queryTimer, int requestCount, int unfinishedCount) {
+        String execTime = null;
+        if(queryTimer.isFinished()) {
+            execTime = String.valueOf(queryTimer.getExecTime());
+        }
         try {
-            int id = dbQueryLogger.logTimeOut(queryTimer.getQuery(), queryTimer.getTimeStarted(), queryTimer.getThreshold(), requestCount, unfinishedCount);
+            int id = dbQueryLogger.logTimeOut(queryTimer.getQuery(), queryTimer.getTimeStarted(), queryTimer.getThreshold(), execTime, requestCount, unfinishedCount);
             queryTimer.setId(id);
-            toBeUpdated.add(queryTimer);
+            queryTimer.setLogged();
+            if(execTime != null) {
+                queryTimer.setExecTimeLogged();
+            }
             logger.trace("Logged timed-out Timer: {}", queryTimer);
         } catch (Exception e) {
             logger.error("Error logging timeout: {}", queryTimer, e);
         }
     }
 
+
+    class QueryTimer implements ClosableQuery.ConnectionCloseHook {
+
+
+        private final SQLQuery query;
+
+        private final long threshold;
+
+        private final long timeStarted;
+
+        private long finishedTime = -1;
+
+        private int id = -1;
+
+        private volatile boolean finished = false;
+
+        private boolean isLogged = false;
+
+        private boolean isExecTimeLogged = false;
+
+        public QueryTimer(SQLQuery query, long timeoutThreshold) {
+            this.query = query;
+            this.threshold = timeoutThreshold;
+            this.timeStarted = System.currentTimeMillis();
+        }
+
+        void setFinished() {
+            finished = true;
+            finishedTime = System.currentTimeMillis();
+            if(isTimedOut()) {
+                queryTimers.addLast(this);
+            }
+        }
+
+        @Override
+        public void action(ClosableQuery access) throws SQLException {
+            setFinished();
+            synchronized (this) {
+                this.notifyAll();
+            }
+        }
+
+        public boolean isTimedOut() {
+            if(isFinished()) {
+                return threshold < getExecTime();
+            } else {
+                return getRemainingMillis() <= 0;
+            }
+        }
+
+        public boolean isFinished() {
+            return finished;
+        }
+
+        public long getFinishedTime() {
+            if(!isFinished()) {
+                throw new IllegalStateException();
+            }
+            return finishedTime;
+        }
+
+        public long getExecTime() {
+            if(!isFinished()) {
+                throw new IllegalStateException();
+            }
+            return finishedTime - timeStarted;
+        }
+
+        public long getRemainingMillis() {
+            return threshold - (System.currentTimeMillis() - timeStarted);
+        }
+
+        public SQLQuery getQuery() {
+            return query;
+        }
+
+        public long getTimeStarted() {
+            return timeStarted;
+        }
+
+        public long getThreshold() {
+            return threshold;
+        }
+
+        public boolean isLogged() {
+            return isLogged;
+        }
+
+        public void setLogged() {
+            isLogged = true;
+        }
+
+        public boolean isExecTimeLogged() {
+            return isExecTimeLogged;
+        }
+
+        public void setExecTimeLogged() {
+            isExecTimeLogged = true;
+        }
+
+        @Override
+        public String toString() {
+            return "QueryTimer{" +
+                    "finished=" + finished +
+                    ", query=" + query +
+                    ", threshold=" + threshold +
+                    ", timeStarted=" + timeStarted +
+                    ", finishedTime=" + finishedTime +
+                    '}';
+        }
+
+        public int getId() {
+            return id;
+        }
+
+        public void setId(int i) {
+            this.id = i;
+        }
+
+    }
 }

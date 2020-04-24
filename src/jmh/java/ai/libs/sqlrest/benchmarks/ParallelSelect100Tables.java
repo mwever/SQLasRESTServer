@@ -52,7 +52,7 @@ public class ParallelSelect100Tables {
     private String numWorkers;
 
     @Param({
-            "1000", "3000"
+            "1000"
     })
     private String numJobs;
 

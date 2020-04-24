@@ -161,13 +161,15 @@ task jmh(type: JavaExec, dependsOn: [jmhClasses, prepareJMHOutputDir]) {
                 benchmarkClass, // benchmark class
                 '-rf', 'text', // result format
                 '-rff', "out/${benchmarkClass}-${currentTimeStr}.txt", // result file
-                '-prof', 'stack', '-prof', 'gc']
+//                '-prof', 'stack', '-prof', 'gc'
+        ]
     } else {
         // benchmark all `@Benchmark` classes
         commandArgs = [
                 '-rf', 'text', // result format
                 '-rff', "out/benchmark-results-${currentTimeStr}.txt", // result file
-                '-prof', 'stack', '-prof', 'gc']
+//                '-prof', 'stack', '-prof', 'gc'
+        ]
     }
     args commandArgs
     jvmArgs '-ea'
