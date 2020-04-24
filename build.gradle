@@ -112,6 +112,7 @@ bootRun {
             throw new IllegalArgumentException("Working directory cannot be set to ${propertyWorkingDir}. It isn't a directory.")
         }
         workingDir = propertyWorkingDir
+        jvmArgs("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5566")
     } else {
         workingDir = rootDir.getAbsolutePath()
     }

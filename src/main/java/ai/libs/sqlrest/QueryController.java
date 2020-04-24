@@ -9,7 +9,9 @@ import org.aeonbits.owner.ConfigCache;
 import org.api4.java.datastructure.kvstore.IKVStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -25,8 +27,12 @@ public class QueryController {
 
 	private IQueryInterceptor iQueryInterceptor;
 
-	public QueryController(@Qualifier("interceptorConf") IQueryInterceptor access) {
+
+	private QueryRuntimeModel runtimeModel;
+
+	public QueryController(@Qualifier("interceptorConf") IQueryInterceptor access, QueryRuntimeModel runtimeModel) {
 	    this.iQueryInterceptor = access;
+	    this.runtimeModel = runtimeModel;
     }
 
 	private ClosableQuery getConnector(final SQLQuery query) throws SQLException, InterruptedException {
@@ -71,6 +77,11 @@ public class QueryController {
             return connector.insert(query.getQuery(), Collections.emptyList());
         }
 	}
+
+	@GetMapping("/runtime")
+    public Map<Double, Double> runtime() {
+	    return runtimeModel.getQueryTimes();
+    }
 
 	private void assertLegalQuery(final String query) {
 		if (query.contains(";")) {
