@@ -149,7 +149,7 @@ For example, `localhost:8080/runtime` might respond with:
 
 }
 ----
-<1> The fastest one percent of queries take at most 3 milli seconds.
-<2> An average query takes 124 milli second.
-<3> The slowest one percent of queries take at least 554 milli second.
-<4> The amount of queries served by the
+<1> The fastest one percent of queries take at most 3 milliseconds.
+<2> An average query takes 124 milliseconds.
+<3> The slowest one percent of queries take at least 554 milliseconds.
+<4> The amount of queries served by the service.
