@@ -79,7 +79,7 @@ public class QueryController {
 	}
 
 	@GetMapping("/runtime")
-    public Map<Double, Double> runtime() {
+    public Map<String, Double> runtime() {
 	    return runtimeModel.getQueryTimes();
     }
 
