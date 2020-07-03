@@ -9,7 +9,9 @@ import org.aeonbits.owner.ConfigCache;
 import org.api4.java.datastructure.kvstore.IKVStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,18 +25,18 @@ public class QueryController {
 
     private final static IServerConfig config = ConfigCache.getOrCreate(IServerConfig.class);
 
-	private IAdapterArbiter iAdapterArbiter;
+	private IQueryInterceptor iQueryInterceptor;
 
-	public QueryController(@Qualifier("getAccessImpl") IAdapterArbiter access) {
-	    this.iAdapterArbiter = access;
+
+	private QueryRuntimeModel runtimeModel;
+
+	public QueryController(@Qualifier("interceptorConf") IQueryInterceptor access, QueryRuntimeModel runtimeModel) {
+	    this.iQueryInterceptor = access;
+	    this.runtimeModel = runtimeModel;
     }
 
-	private IDatabaseAdapter getConnector(final String token) throws SQLException, InterruptedException {
-	    return iAdapterArbiter.acquire(token);
-	}
-
-	private void giveBackConnector(IDatabaseAdapter adapter, final String token) throws SQLException {
-	    iAdapterArbiter.release(adapter, token);
+	private ClosableQuery getConnector(final SQLQuery query) throws SQLException, InterruptedException {
+	    return iQueryInterceptor.requestConnection(query);
     }
 
 	@PostMapping("/query")
@@ -44,14 +46,9 @@ public class QueryController {
 		} catch (Exception e) {
 			throw new IllegalArgumentException("Query is not allowed", e);
 		}
-        IDatabaseAdapter connector = null;
-        String token = query.getToken();
-        try {
-            connector = this.getConnector(token);
-            return connector.query(query.getQuery());
-        } finally {
-            if (connector != null)
-		        giveBackConnector(connector, token);
+        try (ClosableQuery connection = this.getConnector(query)) {
+            IDatabaseAdapter connector = connection.getAdapter();
+            return connection.getAdapter().query(query.getQuery());
         }
 	}
 
@@ -62,14 +59,9 @@ public class QueryController {
 		} catch (Exception e) {
 			throw new IllegalArgumentException("Query is not allowed", e);
 		}
-        IDatabaseAdapter connector = null;
-        String token = query.getToken();
-        try {
-            connector = this.getConnector(token);
+        try (ClosableQuery connection = this.getConnector(query)) {
+            IDatabaseAdapter connector = connection.getAdapter();
             return connector.update(query.getQuery());
-        } finally {
-            if (connector != null)
-                giveBackConnector(connector, token);
         }
 	}
 
@@ -80,16 +72,16 @@ public class QueryController {
 		} catch (Exception e) {
 			throw new IllegalArgumentException("Query is not allowed", e);
 		}
-        IDatabaseAdapter connector = null;
-        String token = query.getToken();
-        try {
-            connector = this.getConnector(token);
+        try (ClosableQuery connection = this.getConnector(query)) {
+            IDatabaseAdapter connector = connection.getAdapter();
             return connector.insert(query.getQuery(), Collections.emptyList());
-        } finally {
-            if (connector != null)
-                giveBackConnector(connector, token);
         }
 	}
+
+	@GetMapping("/runtime")
+    public Map<String, Double> runtime() {
+	    return runtimeModel.getQueryTimes();
+    }
 
 	private void assertLegalQuery(final String query) {
 		if (query.contains(";")) {

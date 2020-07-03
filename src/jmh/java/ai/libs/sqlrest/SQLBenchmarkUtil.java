@@ -48,7 +48,7 @@ public final class SQLBenchmarkUtil {
 
     public static Properties getPerformanceProps() {
         Properties perfProps = new Properties();
-        File perfPropFile = new File("benchmark-workingdir/server.perf.properties");
+        File perfPropFile = new File("conf/server.perf.properties");
         try(FileInputStream fis = new FileInputStream(perfPropFile)) {
             perfProps.load(fis);
         } catch (Exception e) {

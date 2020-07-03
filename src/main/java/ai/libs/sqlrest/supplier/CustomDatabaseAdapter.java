@@ -16,10 +16,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
 
-public class CustomServiceAdapter implements IDatabaseAdapter {
+public class CustomDatabaseAdapter implements IDatabaseAdapter {
 
     // A static field to speed up creation of instances.
-    private static Logger logger = LoggerFactory.getLogger(CustomServiceAdapter.class);
+    private static Logger logger = LoggerFactory.getLogger(CustomDatabaseAdapter.class);
 
     private static final ResultSetToKVStoreSerializer SERIALIZER = new ResultSetToKVStoreSerializer();
 
@@ -32,7 +32,7 @@ public class CustomServiceAdapter implements IDatabaseAdapter {
 
     private final ISQLQueryBuilder queryBuilder = new MySQLQueryBuilder();
 
-    public CustomServiceAdapter(String user, String password, String databaseName) {
+    public CustomDatabaseAdapter(String user, String password, String databaseName) {
         connect = new BaseConnectionHandler(new DefaultConnectionSupplier(), user, password, databaseName);
     }
 

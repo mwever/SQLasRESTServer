@@ -14,5 +14,11 @@
         <Root level="INFO">
             <AppenderRef ref="LogToConsole"/>
         </Root>
+        <Logger name="ai.libs.sqlrest.interceptors.WatchdogInterceptor" level="TRACE" additivity="false">
+            <AppenderRef ref="LogToConsole"/>
+        </Logger>
+        <Logger name="ai.libs.sqlrest.DBQueryLogger" level="TRACE" additivity="false">
+            <AppenderRef ref="LogToConsole"/>
+        </Logger>
     </Loggers>
 </Configuration>

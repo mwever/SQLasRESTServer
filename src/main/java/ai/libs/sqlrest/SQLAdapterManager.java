@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class SQLAdapterManager {
 
-    private Map<String, TokenConnectionHandle> tokenConnectionHandleMap = new ConcurrentHashMap<>();
+    private final Map<String, TokenConnectionHandle> tokenConnectionHandleMap = new ConcurrentHashMap<>();
 
     private ISLAdapterSupplier provider;
 
@@ -38,4 +38,19 @@ public class SQLAdapterManager {
         return handle;
     }
 
+    public int getNumConnections() {
+        int numConnections = 0;
+        for (Map.Entry<String, TokenConnectionHandle> entry : tokenConnectionHandleMap.entrySet()) {
+            numConnections += entry.getValue().getCurrentAdapters().size();
+        }
+        return numConnections;
+    }
+
+    public int getNumConnections(String token) {
+        TokenConnectionHandle handle = tokenConnectionHandleMap.getOrDefault(token, null);
+        if(handle == null) {
+            return 0;
+        }
+        return handle.getCurrentAdapters().size();
+    }
 }

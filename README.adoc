@@ -39,6 +39,14 @@ server.adapter.accessLimit=100
 # Should the access to the adapters be by random, or by round robin.
 server.adapter.randomAccess=true
 
+# Query Logging
+
+server.logging.logSlowQueries = true <6>
+server.logging.slowQueryThreshold = 3000 <7>
+server.logging.dynamicSlowQueryThreshold = true <8>
+server.logging.dynamicSlowQueryThresholdMinLimit = 500 <9>
+server.logging.slowestQueriesQuantile = 0.995 <10>
+
 # Performance options used in database connections and their default value:
 #db.prop.useCompression = false
 #db.prop.defaultFetchSize = 0
@@ -55,6 +63,11 @@ server.adapter.randomAccess=true
 <3> The username used for authentication.
 <4> The password used for authentication.
 <5> Number of connections to the database. A higher amount causes more overhead contention but allows for parallel access.
+<6> Slow queries will be logged into the admin database. The `Querylogs` table has to be present.
+<7> Queries slower than this threshold (milli seconds) will be logged.
+<8> If true the threshold will be dynamically lowered in order to capture the slowest quantile of requests.
+<9> The dynamic threshold will not be lower than this amount.
+<10> The quantile of queries that are logged if dynamic threshold is enabled.
 
 
 === Startup
@@ -85,3 +98,58 @@ This starts a container with named `sqlrest`.
 ----
 >> bash stop.sh
 ----
+
+=== Logging table
+
+If logging needs to be enabled create a table in the admin database called Querylogs:
+
+[source]
+----
+DROP TABLE IF EXISTS `Querylogs`;
+
+CREATE TABLE `Querylogs` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `session_id` BIGINT NOT NULL,
+    `log_reason` text NOT NULL,
+    `token` text NOT NULL,
+    `sql_query` text NOT NULL,
+    `query_start_time` timestamp NOT NULL,
+    `query_execution_time` BIGINT,
+    `query_threshold` BIGINT,
+    `num_current_db_connections` int NOT NULL,
+    `num_current_db_token_connections` int NOT NULL,
+    `num_requests_since_query` int,
+    `num_unfinished_requests_since_query` int,
+    `num_jvm_threads` int NOT NULL,
+    `used_jvm_memory` BIGINT NOT NULL,
+    `free_jvm_memory` BIGINT NOT NULL,
+    PRIMARY KEY (`id`)
+);
+----
+
+=== Query runtime
+
+The service records how much it takes to execute queries.
+After the service has served some requests, `/runtime` will return information about average query runtime.
+
+For example, `localhost:8080/runtime` might respond with:
+[source]
+----
+{
+    "0.005": 2.0,
+    "0.01": 3.0, <1>
+    "0.1": 28.982330377916117,
+    "0.25": 64.98681926316468,
+    "0.5": 124.2131860315074, <2>
+    "0.75": 178.8774166718975,
+    "0.9": 219.68377758164164,
+    "0.99": 554.1196257142961, <3>
+    "0.995": 1153.10451593136,
+    "samples": 29181 <4>
+
+}
+----
+<1> The fastest one percent of queries take at most 3 milliseconds.
+<2> An average query takes 124 milliseconds.
+<3> The slowest one percent of queries take at least 554 milliseconds.
+<4> The amount of queries served by the service.

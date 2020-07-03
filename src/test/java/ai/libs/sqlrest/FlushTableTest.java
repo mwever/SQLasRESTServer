@@ -1,13 +1,23 @@
 package ai.libs.sqlrest;
 
+import ai.libs.jaicore.basic.kvstore.KVStore;
 import ai.libs.jaicore.db.sql.SQLAdapter;
+import ai.libs.sqlrest.model.SQLQuery;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.aeonbits.owner.ConfigCache;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.api4.java.datastructure.kvstore.IKVStore;
 import org.junit.Test;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.sql.*;
 import java.util.List;
 import java.util.Properties;
@@ -72,6 +82,25 @@ public class FlushTableTest {
             }
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException("Error trying to destroy other process listening on port 8080.", e);
+        }
+    }
+
+    @Test
+    public void slowRequest() throws IOException {
+        HttpPost httpPost = new HttpPost("http://localhost:8080/query");
+        ObjectMapper mapper = new ObjectMapper();
+        SQLQuery queryObj = new SQLQuery("token_d0", String.format("SELECT * " +
+                "FROM %s " +
+                "ORDER BY RAND() LIMIT %d", "t0", 1000));
+        String postBody = mapper.writeValueAsString(queryObj);
+        httpPost.setEntity(new StringEntity(postBody));
+        httpPost.setHeader("Content-Type", "application/json");
+        try(CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            try (CloseableHttpResponse response2 = httpClient.execute(httpPost)) {
+                assert response2.getStatusLine().getStatusCode() == 200;
+                List<KVStore> o = mapper.readValue(response2.getEntity().getContent(), mapper.getTypeFactory().constructCollectionType(List.class, KVStore.class));
+                assert o != null;
+            }
         }
     }
 }

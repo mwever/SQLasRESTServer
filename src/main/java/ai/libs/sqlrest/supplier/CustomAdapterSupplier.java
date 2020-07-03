@@ -6,6 +6,6 @@ import ai.libs.sqlrest.ISLAdapterSupplier;
 public class CustomAdapterSupplier implements ISLAdapterSupplier {
     @Override
     public IDatabaseAdapter get(String user, String password, String database) {
-        return new CustomServiceAdapter(user, password, database);
+        return new CustomDatabaseAdapter(user, password, database);
     }
 }

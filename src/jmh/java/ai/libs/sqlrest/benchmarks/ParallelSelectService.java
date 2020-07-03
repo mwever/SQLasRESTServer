@@ -40,7 +40,7 @@ public class ParallelSelectService {
 //            "1-random-time-null",
 //            "100-random-time-null",
             "select-1",
-            "select-100"
+//            "select-100"
     }) // each entry is 3.5 kByte
     private String query;
 

@@ -84,6 +84,8 @@ dependencies {
 	
 	compile("org.apache.httpcomponents:httpclient:4.5.10", excludeLoggingLibrary)
 
+    compile group: 'com.tdunning', name: 't-digest', version: '3.2'
+
 //    runtime("org.springframework.boot:spring-boot-devtools")
     
     testCompile("junit:junit")
@@ -112,6 +114,9 @@ bootRun {
         workingDir = propertyWorkingDir
     } else {
         workingDir = rootDir.getAbsolutePath()
+    }
+    if(project.properties["bootRun.remoteDebug"]) {
+        jvmArgs("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5566")
     }
 }
 
@@ -159,13 +164,15 @@ task jmh(type: JavaExec, dependsOn: [jmhClasses, prepareJMHOutputDir]) {
                 benchmarkClass, // benchmark class
                 '-rf', 'text', // result format
                 '-rff', "out/${benchmarkClass}-${currentTimeStr}.txt", // result file
-                '-prof', 'stack', '-prof', 'gc']
+//                '-prof', 'stack', '-prof', 'gc'
+        ]
     } else {
         // benchmark all `@Benchmark` classes
         commandArgs = [
                 '-rf', 'text', // result format
                 '-rff', "out/benchmark-results-${currentTimeStr}.txt", // result file
-                '-prof', 'stack', '-prof', 'gc']
+//                '-prof', 'stack', '-prof', 'gc'
+        ]
     }
     args commandArgs
     jvmArgs '-ea'
