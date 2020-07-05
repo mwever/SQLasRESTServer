@@ -103,7 +103,9 @@ public interface IServerConfig extends Mutable {
     @DefaultValue("1")
     public int getNumAdapterAccessLimit();
 
-
+    /**
+     * If this method is true, the service will log slow queries.
+     */
     @Key(K_SERVER_LOGGING_LOG_SLOW_QUERIES)
     @DefaultValue("true")
     public boolean isLogSlowQueriesEnabled();

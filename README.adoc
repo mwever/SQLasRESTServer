@@ -86,7 +86,7 @@ This assumes that the docker deamon is running and accessible  from the commandl
 The resulting docker image is tagged `ai-libs/sql-rest-server`.
 +
 At this stage, the server configuration is copied from `conf/server.properties` into the docker image.
-So after making any changes to the `conf/server.properties` file, make sure to redo this step.
+So after making any changes to the `conf/server.properties` file, make sure to redo these steps.
 
 . Start the application.
 +
@@ -94,13 +94,13 @@ So after making any changes to the `conf/server.properties` file, make sure to r
 >> bash run.sh
 ----
 + 
-This starts a container with named `sqlrest` running the SQLasRESTServer on port 8080.
-To change to another port, edit `run.sh` before executing it and replace `-p 8080:8080` with `-p desiredport:8080`.
+This starts a container named `sqlrest` that runs the SQLasRESTServer on port 8080.
+To change it to another port, edit `run.sh` before executing it and replace `-p 8080:8080` with `-p <desiredport>:8080`.
 +
 The application will check its connection to the database defined in `conf/server.properties` and fail if unsuccessful.
 Check the logs of the server to make sure this doesn't happen: `docker logs sqlrest`
 
-. Stop the application.
+. Stop the application. This stops the docker container and removes it.
 +
 ----
 >> bash stop.sh

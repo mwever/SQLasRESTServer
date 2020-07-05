@@ -1,5 +1,4 @@
-DROP TABLE IF EXISTS `Querylogs`;
-
+-- DROP TABLE IF EXISTS `Querylogs`;
 CREATE TABLE `Querylogs` (
     `id` int(11) NOT NULL AUTO_INCREMENT,
     `session_id` BIGINT NOT NULL,

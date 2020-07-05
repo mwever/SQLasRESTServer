@@ -1,6 +1,10 @@
 package ai.libs.sqlrest;
 
 import ai.libs.jaicore.db.sql.SQLAdapter;
+import ai.libs.sqlrest.model.ResourceNotFoundException;
+import com.google.common.base.Charsets;
+import com.google.common.io.ByteSource;
+import jdk.javadoc.internal.doclets.formats.html.markup.Table;
 import org.aeonbits.owner.ConfigCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,7 +13,11 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.SQLSyntaxErrorException;
 import java.util.Objects;
 
 import static java.util.Objects.requireNonNull;
@@ -20,16 +28,66 @@ public class SQLServerApplication {
 	private final static Logger logger = LoggerFactory.getLogger(SQLServerApplication.class);
 
 	public static void main(final String[] args) {
-		SpringApplication.run(SQLServerApplication.class, args);
 		try {
 			assertConfigurationIsValid();
 		} catch(Exception ex) {
 			logger.error("Error checking the sql server configuration: ", ex);
 			System.exit(1);
 		}
+		try {
+			createAdminTables();
+		} catch(SQLException ex) {
+			logger.error("Couldn't create the neccessary tables for the SQLasRESTServer.", ex);
+			System.exit(1);
+		} catch (ResourceNotFoundException ex) {
+			logger.warn("Error trying to create tables. Continuing as if the tables exist.",ex);
+		}
+		SpringApplication.run(SQLServerApplication.class, args);
 	}
 
-	public static void assertConfigurationIsValid() {
+	private static void createAdminTables() throws SQLException, ResourceNotFoundException {
+		IServerConfig config = ConfigCache.getOrCreate(IServerConfig.class);
+		SQLAdapter adminAdapter = config.createAdminAdapter();
+		if(config.isLogSlowQueriesEnabled()) {
+			createTables(adminAdapter, "logging");
+		}
+		createTables(adminAdapter, "experiments");
+	}
+
+	private static void createTables(SQLAdapter adminAdapter, String tableName) throws SQLException,
+			ResourceNotFoundException {
+		String createTableQuery = getCreateTableSQLQuery(tableName);
+		try (PreparedStatement ps = adminAdapter.getPreparedStatement(createTableQuery)) {
+			ps.execute();
+		} catch (SQLSyntaxErrorException ex) {
+			// ignore an error thrown when the table already exists:
+			if(!ex.getMessage().matches("Table '.*' already exists")){
+				throw ex;
+			}
+		}
+	}
+
+	private static String getCreateTableSQLQuery(String tableName) throws ResourceNotFoundException {
+		final String resourceFileName = String.format("create_%s_table.sql", tableName);
+		ByteSource byteSource = new ByteSource() {
+			@Override public InputStream openStream() throws IOException {
+				InputStream resource = Thread.currentThread()
+						.getContextClassLoader().getResourceAsStream(resourceFileName);
+				if(resource == null) {
+					throw new IOException("Resource not found.");
+				} else {
+					return resource;
+				}
+			}
+		};
+		try {
+			return byteSource.asCharSource(Charsets.UTF_8).read();
+		} catch (IOException e) {
+			throw new ResourceNotFoundException("Couldn't read sql query from resouce: " + resourceFileName, e);
+		}
+	}
+
+	private static void assertConfigurationIsValid() {
 		IServerConfig config = ConfigCache.getOrCreate(IServerConfig.class);
 		requireNonNull(config, "The sql server configuration is null.");
 

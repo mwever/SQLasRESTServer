@@ -47,7 +47,6 @@ public class QueryController {
 			throw new IllegalArgumentException("Query is not allowed", e);
 		}
         try (ClosableQuery connection = this.getConnector(query)) {
-            IDatabaseAdapter connector = connection.getAdapter();
             return connection.getAdapter().query(query.getQuery());
         }
 	}
