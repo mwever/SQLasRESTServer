@@ -84,6 +84,9 @@ This assumes that the docker deamon is running and accessible  from the commandl
 ----
 + 
 The resulting docker image is tagged `ai-libs/sql-rest-server`.
++
+At this stage, the server configuration is copied from `conf/server.properties` into the docker image.
+So after making any changes to the `conf/server.properties` file, make sure to redo this step.
 
 . Start the application.
 +
@@ -91,7 +94,11 @@ The resulting docker image is tagged `ai-libs/sql-rest-server`.
 >> bash run.sh
 ----
 + 
-This starts a container with named `sqlrest`.
+This starts a container with named `sqlrest` running the SQLasRESTServer on port 8080.
+To change to another port, edit `run.sh` before executing it and replace `-p 8080:8080` with `-p desiredport:8080`.
++
+The application will check its connection to the database defined in `conf/server.properties` and fail if unsuccessful.
+Check the logs of the server to make sure this doesn't happen: `docker logs sqlrest`
 
 . Stop the application.
 +
@@ -101,7 +108,14 @@ This starts a container with named `sqlrest`.
 
 === Logging table
 
-If logging needs to be enabled create a table in the admin database called Querylogs:
+The server is capable of logging slow requests.
+To do so, enable the option in `conf/server.properties`:
+
+----
+server.logging.logSlowQueries = true
+----
+
+Also, create a table in the admin database called Querylogs:
 
 [source]
 ----
@@ -129,10 +143,10 @@ CREATE TABLE `Querylogs` (
 
 === Query runtime
 
-The service records how much it takes to execute queries.
+By default, the service records the time it takes to execute queries.
 After the service has served some requests, `/runtime` will return information about average query runtime.
 
-For example, `localhost:8080/runtime` might respond with:
+For example, after serving 29181 requests,  `localhost:8080/runtime` might respond with:
 [source]
 ----
 {

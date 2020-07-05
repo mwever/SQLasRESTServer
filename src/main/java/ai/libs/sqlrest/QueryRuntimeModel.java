@@ -1,10 +1,8 @@
 package ai.libs.sqlrest;
 
-import ai.libs.jaicore.timing.TimedObjectEvaluator;
 import com.tdunning.math.stats.TDigest;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicLong;

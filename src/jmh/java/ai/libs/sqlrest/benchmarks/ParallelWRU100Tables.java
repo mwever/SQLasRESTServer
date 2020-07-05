@@ -27,8 +27,8 @@ import static ai.libs.sqlrest.SQLBenchmarkUtil.getPerformanceProps;
 @OutputTimeUnit(TimeUnit.SECONDS)
 @Threads(1)
 @Fork(value = 1, jvmArgs = {"-Xms4G", "-Xmx8G"})
-@Warmup(iterations = 5, time = 1)
-@Measurement(iterations = 5, time = 1)
+@Warmup(iterations = 50, time = 1)
+@Measurement(iterations = 50, time = 1)
 @State(Scope.Benchmark)
 public class ParallelWRU100Tables {
 
@@ -164,7 +164,7 @@ public class ParallelWRU100Tables {
             bh.consume(future.get(resultFetchTimeout, TimeUnit.MILLISECONDS));
         }
     }
-    @Benchmark
+//    @Benchmark
     public void parallelQueryOverAdapter(SQLClientState state, Blackhole bh) throws InterruptedException, TimeoutException, ExecutionException {
         if(usePerfProperties.equals("false")) {
             throw new IllegalStateException();
