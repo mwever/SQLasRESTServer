@@ -13,22 +13,28 @@ import java.util.concurrent.Semaphore;
 
 public class LimitedAccessConnectionInterceptor implements IQueryInterceptor {
 
-    private final IServerConfig config = ConfigCache.getOrCreate(IServerConfig.class);
+    private final int numAccessLimit;
 
-    private Map<String, Semaphore> tokenPermitsMap;
+    private final Map<String, Semaphore> tokenPermitsMap = new ConcurrentHashMap<>();
 
-    private IQueryInterceptor arbiter;
+    private final IQueryInterceptor arbiter;
 
     public LimitedAccessConnectionInterceptor(IQueryInterceptor arbiter) {
+        this.numAccessLimit = ConfigCache.getOrCreate(IServerConfig.class).getNumAdapterAccessLimit();
         this.arbiter = arbiter;
-        this.tokenPermitsMap = new ConcurrentHashMap<>();
+    }
+
+
+    public LimitedAccessConnectionInterceptor(int numAccessLimit, IQueryInterceptor arbiter) {
+        this.numAccessLimit = numAccessLimit;
+        this.arbiter = arbiter;
     }
 
     @Override
     public ClosableQuery requestConnection(SQLQuery query) throws SQLException, InterruptedException {
         String token = query.getToken();
         Semaphore permits = tokenPermitsMap.computeIfAbsent(token,
-                t -> new Semaphore(config.getNumAdapterAccessLimit()));
+                t -> new Semaphore(numAccessLimit));
         permits.acquire();
         ClosableQuery access = arbiter.requestConnection(query);
         access.addCloseHook(this::release);

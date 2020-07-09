@@ -21,7 +21,7 @@ public class SQLAdapterManager {
         this.provider = provider;
     }
 
-    public List<IDatabaseAdapter> getAdaptersFor(String token) throws SQLException {
+    public List<IDatabaseAdapter> getAdaptersFor(String token) {
         TokenConnectionHandle handle = tokenConnectionHandleMap.computeIfAbsent(token, this::createTokenConnectionHandle);
 //        handle.requireNumConnectionsMatchesConfig();
         return handle.getCurrentAdapters();

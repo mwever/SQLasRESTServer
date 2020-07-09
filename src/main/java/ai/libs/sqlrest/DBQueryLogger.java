@@ -22,7 +22,7 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Component
-public class DBQueryLogger {
+public class DBQueryLogger implements IDBQueryLogger {
 
     private final static Logger logger = LoggerFactory.getLogger(DBQueryLogger.class);
 

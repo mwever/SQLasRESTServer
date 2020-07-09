@@ -11,14 +11,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 public class CyclicConnectionArbiter implements IQueryInterceptor {
 
     private final Map<String, AtomicInteger> tokenSQLAdapterIndexMap = new ConcurrentHashMap<>();
 
-    private final SQLAdapterManager adapterManager;
+    private final Function<String, List<IDatabaseAdapter>> adapterManager;
 
     public CyclicConnectionArbiter(SQLAdapterManager adapterManager) {
+        this.adapterManager = adapterManager::getAdaptersFor;
+    }
+
+    // For testing
+    CyclicConnectionArbiter(Function<String, List<IDatabaseAdapter>> adapterManager) {
         this.adapterManager = adapterManager;
     }
 
@@ -29,7 +35,7 @@ public class CyclicConnectionArbiter implements IQueryInterceptor {
                 = tokenSQLAdapterIndexMap.computeIfAbsent(token, t -> new AtomicInteger(0));
         int currentIndex = atomicIndex.getAndIncrement();
         int readIndex = currentIndex;
-        List<IDatabaseAdapter> adapters = adapterManager.getAdaptersFor(token);
+        List<IDatabaseAdapter> adapters = adapterManager.apply(token);
         int numAdapters = adapters.size();
         if(currentIndex < 0) {
             throw new IllegalStateException("The current index is negative: " + currentIndex);
