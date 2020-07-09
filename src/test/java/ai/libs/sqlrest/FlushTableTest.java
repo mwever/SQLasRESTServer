@@ -12,6 +12,8 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.api4.java.datastructure.kvstore.IKVStore;
+import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.BufferedReader;
@@ -28,37 +30,55 @@ public class FlushTableTest {
 
     @Test
     public void testFlushCommandsThroughConnection() throws Exception {
-        Connection connection = null;
         IServerConfig conf = ConfigCache.getOrCreate(IServerConfig.class);
         String connectionString = "jdbc:mysql" + "://" + conf.getDBHost() + "/" + conf.getAdminDBName();
         Properties props = new Properties();
         props.put("user", conf.getAdminDBUser());
         props.put("password", conf.getAdminDBPassword());
-        try {
-            connection = DriverManager.getConnection(connectionString, props);
+        try (Connection connection = DriverManager.getConnection(connectionString, props)) {
+
             CallableStatement callableStatement = connection.prepareCall("FLUSH HOSTS");
             boolean execute = callableStatement.execute();
-            System.out.println(String.valueOf(callableStatement.getUpdateCount()));
-            ResultSet resultSet = callableStatement.getResultSet();
-            if(resultSet.getWarnings().getMessage() != null) {
-                throw new Exception(resultSet.getWarnings().getMessage());
+            System.out.println(
+                    "FLUSH HOSTS update count: " + String.valueOf(callableStatement.getUpdateCount()));
+            if(execute) {
+                ResultSet resultSet = callableStatement.getResultSet();
+                if (resultSet.getWarnings() != null &&
+                        resultSet.getWarnings().getMessage() != null) {
+                    throw new Exception(resultSet.getWarnings().getMessage());
+                }
             }
         } catch(Exception ex) {
-            connection.close();
             throw ex;
         }
     }
 
 
+
+    /**
+     * This test was meant to test if FLUSH commands can be executed with the SQLAdapter.
+     * There was no easy way to make it possible..
+     * Instead it was implemented using java.sql.Connection;
+     * see: `testFlushCommandsThroughConnection`
+     */
     @Test
+    @Ignore
+    @Deprecated
     public void testFlushCommands() throws IOException, SQLException {
         IServerConfig conf = ConfigCache.getOrCreate(IServerConfig.class);
         SQLAdapter sqlAdapter = conf.createAdminAdapter();
-        List<IKVStore> query = sqlAdapter.query("FLUSH HOSTS; FLUSH TABLES;");
-        assert query.isEmpty();
+        try(PreparedStatement preparedStatement = sqlAdapter.getPreparedStatement("FLUSH HOSTS; FLUSH TABLES;")) {
+            boolean success = preparedStatement.execute();
+            assert  success;
+        }
     }
 
+    /**
+     * This method was used to test a way to programmatically kill services on port 8080 running on this host.
+     * It doesn't work on Windows OS because it relies on lsof
+     */
     @Test
+    @Ignore
     public void killOtherService() {
         try {
             Process getPidOtherService = Runtime.getRuntime().exec("lsof -t -i :8080");
@@ -85,6 +105,11 @@ public class FlushTableTest {
         }
     }
 
+    /**
+     * This test only works if the experiments table in the admin database contains an entry with `token_d0`.
+     * The database of this token, as it is defined in the entry above, needs to have a table called `t0`.
+     * @throws IOException
+     */
     @Test
     public void slowRequest() throws IOException {
         HttpPost httpPost = new HttpPost("http://localhost:8080/query");
@@ -97,9 +122,22 @@ public class FlushTableTest {
         httpPost.setHeader("Content-Type", "application/json");
         try(CloseableHttpClient httpClient = HttpClients.createDefault()) {
             try (CloseableHttpResponse response2 = httpClient.execute(httpPost)) {
-                assert response2.getStatusLine().getStatusCode() == 200;
-                List<KVStore> o = mapper.readValue(response2.getEntity().getContent(), mapper.getTypeFactory().constructCollectionType(List.class, KVStore.class));
-                assert o != null;
+                int statusCode = response2.getStatusLine().getStatusCode();
+                String msg = response2.getStatusLine().getReasonPhrase();
+                msg = msg == null ? "null" : msg;
+                if(statusCode == 200) {
+                    List<KVStore> o = mapper.readValue(response2.getEntity().getContent(), mapper.getTypeFactory().constructCollectionType(List.class, KVStore.class));
+                    assert o != null;
+                    assert o.size() == 1000;
+                }
+                else if(statusCode == 404) {
+                    // Token was not found..
+                    System.err.println(String.format("FlushTableTest::slowRequest: Make sure token %s exists for database with a table called %s.", "token_d0", "t0"));
+                } else {
+                    throw new AssertionError("Unexpected response code: " + statusCode + "\nMessage: " + msg);
+                }
+            } catch(IOException ex) {
+                throw new AssertionError("Unexpected exception", ex);
             }
         }
     }

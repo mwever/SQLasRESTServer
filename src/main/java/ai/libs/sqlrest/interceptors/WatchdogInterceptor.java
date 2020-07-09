@@ -15,13 +15,10 @@ public class WatchdogInterceptor implements IQueryInterceptor, Runnable {
 
     private final static Logger logger = LoggerFactory.getLogger(WatchdogInterceptor.class);
 
-    private final static IServerConfig CONFIG = ConfigCache.getOrCreate(IServerConfig.class);
-
-
     // dependencies
     private final IQueryInterceptor prevInterceptor;
 
-    private final DBQueryLogger dbQueryLogger;
+    private final IDBQueryLogger dbQueryLogger;
 
     private final QueryRuntimeModel queryRuntimeModel;
 
@@ -36,18 +33,28 @@ public class WatchdogInterceptor implements IQueryInterceptor, Runnable {
 
     private final AtomicLong dynamicThresholdCache = new AtomicLong(0);
 
-    private final double slowestQuantile = CONFIG.slowestQueriesQuantile();
+    private final double slowestQuantile;
 
-    private final long slowestStaticThreshold = CONFIG.slowQueryThreshold() <= 0 ? 1 : CONFIG.slowQueryThreshold();
+    private final long slowestStaticThreshold;
 
-    private final long dynamicThresholdLimit = CONFIG.slowQueryDynamicMinLimit() <= 0 ? 1 : CONFIG.slowQueryDynamicMinLimit();
+    private final long dynamicThresholdLimit;
 
-    private final boolean dynamicThreshold = CONFIG.isQueryThresholdDynamic();
+    private final boolean dynamicThreshold;
 
-    public WatchdogInterceptor(IQueryInterceptor prevInterceptor, DBQueryLogger dbLogger, QueryRuntimeModel queryRuntimeModel) {
+
+    public WatchdogInterceptor(IServerConfig config, IQueryInterceptor prevInterceptor, DBQueryLogger dbLogger, QueryRuntimeModel queryRuntimeModel) {
+        this.slowestQuantile = config.slowestQueriesQuantile();
+        this.slowestStaticThreshold = config.slowQueryThreshold() <= 0 ? 1 : config.slowQueryThreshold();
+        this.dynamicThresholdLimit = config.slowQueryDynamicMinLimit() <= 0 ? 1 : config.slowQueryDynamicMinLimit();
+        this.dynamicThreshold = config.isQueryThresholdDynamic();
+
         this.prevInterceptor = prevInterceptor;
         this.dbQueryLogger = dbLogger;
         this.queryRuntimeModel = queryRuntimeModel;
+    }
+
+    public WatchdogInterceptor(IQueryInterceptor prevInterceptor, DBQueryLogger dbQueryLogger, QueryRuntimeModel queryRuntimeModel) {
+        this(ConfigCache.getOrCreate(IServerConfig.class), prevInterceptor, dbQueryLogger, queryRuntimeModel);
     }
 
     public synchronized void startWatchdog() {

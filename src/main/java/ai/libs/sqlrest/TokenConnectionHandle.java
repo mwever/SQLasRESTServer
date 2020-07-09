@@ -2,6 +2,7 @@ package ai.libs.sqlrest;
 
 import ai.libs.jaicore.db.IDatabaseAdapter;
 import ai.libs.jaicore.db.sql.SQLAdapter;
+import ai.libs.sqlrest.model.ExperimentTokenNotFound;
 import org.aeonbits.owner.ConfigCache;
 import org.api4.java.datastructure.kvstore.IKVStore;
 
@@ -33,7 +34,7 @@ class TokenConnectionHandle {
         List<IKVStore> res = adminAdapter.getResultsOfQuery(
                 "SELECT * FROM experiments WHERE experiment_token='" + token + "'");
         if (res.isEmpty()) {
-            throw new IllegalStateException("No experiment known for the given token!");
+            throw new ExperimentTokenNotFound(token);
         }
         if (res.size() > 1) {
             throw new IllegalStateException("Multiple experiments for the same token. A token must be unique!");

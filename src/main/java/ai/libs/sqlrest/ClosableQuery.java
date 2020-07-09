@@ -2,6 +2,7 @@ package ai.libs.sqlrest;
 
 import ai.libs.jaicore.db.IDatabaseAdapter;
 import ai.libs.sqlrest.model.SQLQuery;
+import org.apache.commons.math3.analysis.function.Exp;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -34,8 +35,16 @@ public class ClosableQuery implements AutoCloseable{
 
     @Override
     public void close() throws SQLException {
+        List<SQLException> exceptions = new ArrayList<>();
         for (ConnectionCloseHook closeHook : closeHooks) {
-            closeHook.action(this);
+            try {
+                closeHook.action(this);
+            } catch (SQLException exception) {
+                exceptions.add(exception);
+            }
+        }
+        if(!exceptions.isEmpty()) {
+            throw new SQLException("Error while executing close hooks: " + exceptions.size(), exceptions.get(0));
         }
     }
 
