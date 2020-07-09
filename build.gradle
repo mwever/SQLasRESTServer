@@ -93,7 +93,7 @@ dependencies {
 
 bootJar {
 	archiveBaseName.set 'sql-rest-server'
-	archiveVersion.set '0.1.0'
+	archiveVersion.set '0.2.0'
 }
 
 configurations {
